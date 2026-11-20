@@ -1,0 +1,22 @@
+{
+  "name": "aura-health-monitoring-dashboard",
+  "version": "4.8.0",
+  "description": "Premium Futuristic Health Monitoring Dashboard and Biometric Telemetry OS",
+  "main": "index.html",
+  "scripts": {
+    "start": "npx serve .",
+    "dev": "npx serve ."
+  },
+  "keywords": [
+    "react",
+    "tailwind",
+    "dashboard",
+    "health",
+    "biometrics",
+    "ecg",
+    "recharts",
+    "telemetry"
+  ],
+  "author": "Antigravity Engineering",
+  "license": "MIT"
+}

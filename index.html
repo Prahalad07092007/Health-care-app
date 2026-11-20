@@ -1,0 +1,2498 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AURA // BioSync OS - Next-Gen Clinical Health Intelligence</title>
+  <meta name="description" content="Next-Gen Clinical Health Monitoring Dashboard with Real-Time Telemetry and Predictive Biometrics." />
+  
+  <!-- Inter & JetBrains Mono Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS Play CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'system-ui', '-apple-system', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'],
+          },
+          colors: {
+            aura: {
+              cyan: '#00F5FF',
+              emerald: '#10B981',
+              violet: '#8B5CF6',
+              rose: '#F43F5E',
+              amber: '#F59E0B',
+              blue: '#38BDF8',
+              obsidian: '#080C14',
+              surface: '#0F1626',
+              card: '#131C31',
+              border: 'rgba(255, 255, 255, 0.08)',
+            }
+          },
+          boxShadow: {
+            'glow-cyan': '0 0 25px -4px rgba(0, 245, 255, 0.35)',
+            'glow-emerald': '0 0 25px -4px rgba(16, 185, 129, 0.35)',
+            'glow-violet': '0 0 25px -4px rgba(139, 92, 246, 0.35)',
+            'glow-rose': '0 0 25px -4px rgba(244, 63, 94, 0.35)',
+            'glow-amber': '0 0 25px -4px rgba(245, 158, 11, 0.35)',
+            'glass': '0 8px 32px 0 rgba(0, 0, 0, 0.37)',
+          },
+          animation: {
+            'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+            'shimmer': 'shimmer 2.5s infinite linear',
+            'radar': 'radar 10s linear infinite',
+          },
+          keyframes: {
+            shimmer: {
+              '0%': { backgroundPosition: '-200% 0' },
+              '100%': { backgroundPosition: '200% 0' }
+            },
+            radar: {
+              '0%': { transform: 'rotate(0deg)' },
+              '100%': { transform: 'rotate(360deg)' }
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- React 18 & ReactDOM -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  
+  <!-- Babel Standalone for direct in-browser JSX compilation -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <!-- Recharts UMD & PropTypes -->
+  <script src="https://unpkg.com/prop-types@15.8.1/prop-types.min.js"></script>
+  <script src="https://unpkg.com/recharts@2.12.7/umd/Recharts.js"></script>
+
+  <style>
+    /* Custom Scrollbars */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(15, 23, 42, 0.2);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(100, 116, 139, 0.3);
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(100, 116, 139, 0.6);
+    }
+    
+    /* Background Ambient Grids */
+    .bg-grid-pattern {
+      background-size: 32px 32px;
+      background-image: 
+        linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+    }
+    html.light .bg-grid-pattern {
+      background-image: 
+        linear-gradient(to right, rgba(0, 0, 0, 0.04) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(0, 0, 0, 0.04) 1px, transparent 1px);
+    }
+
+    /* Glass Effect Utilities */
+    .glass-panel {
+      background: rgba(15, 22, 38, 0.76);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+    }
+    html.light .glass-panel {
+      background: rgba(255, 255, 255, 0.88);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.06);
+    }
+
+    /* ECG Canvas Filter */
+    .ecg-canvas {
+      filter: drop-shadow(0 0 6px rgba(0, 245, 255, 0.65));
+    }
+
+    /* Waveform Animation for Hydration */
+    @keyframes waveMove {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+    .wave-fluid {
+      animation: waveMove 4s linear infinite;
+    }
+  </style>
+</head>
+<body class="bg-[#080C14] text-slate-100 antialiased selection:bg-cyan-500 selection:text-black font-sans transition-colors duration-300 overflow-x-hidden">
+  <div id="root"></div>
+
+  <!-- Main Application Script -->
+  <script type="text/babel">
+    const { useState, useEffect, useRef, useMemo } = React;
+
+    // ==========================================
+    // SOUND SYNTHESIZER (Web Audio API)
+    // Zero external audio files required; pure synthesized haptics
+    // ==========================================
+    const playHapticTone = (type = 'click') => {
+      try {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContext) return;
+        const ctx = new AudioContext();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        const now = ctx.currentTime;
+        if (type === 'click') {
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(800, now);
+          osc.frequency.exponentialRampToValueAtTime(400, now + 0.04);
+          gain.gain.setValueAtTime(0.04, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
+          osc.start(now);
+          osc.stop(now + 0.04);
+        } else if (type === 'chime') {
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(520, now);
+          osc.frequency.exponentialRampToValueAtTime(1040, now + 0.12);
+          gain.gain.setValueAtTime(0.06, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+          osc.start(now);
+          osc.stop(now + 0.18);
+        } else if (type === 'alert') {
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(320, now);
+          osc.frequency.setValueAtTime(440, now + 0.08);
+          gain.gain.setValueAtTime(0.05, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.16);
+          osc.start(now);
+          osc.stop(now + 0.16);
+        }
+      } catch (e) {
+        // AudioContext blocked until user interacts with document
+      }
+    };
+
+    // ==========================================
+    // 100% OFFLINE-SAFE LUCIDE-GRADE SVG ICON SUITE
+    // ==========================================
+    const Icon = ({ name, size = 18, className = "" }) => {
+      const icons = {
+        activity: <path d="M22 12h-4l-3 9L9 3l-3 9H2" />,
+        heart: <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />,
+        moon: <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />,
+        droplets: (
+          <g>
+            <path d="M7 16.3c2.2 0 4-1.83 4-4.05 0-1.16-.57-2.26-1.71-3.19S7.29 6.75 7 5.3c-.29 1.45-1.14 2.84-2.29 3.76S3 11.1 3 12.25c0 2.22 1.8 4.05 4 4.05z" />
+            <path d="M12.56 6.6A10.97 10.97 0 0 0 14 3.02c.5 2.5 2 4.9 4 6.5s3 3.5 3 5.5a6.98 6.98 0 0 1-11.91 4.97" />
+          </g>
+        ),
+        flame: <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z" />,
+        footprints: (
+          <g>
+            <path d="M4 16v-2.38C4 11.5 2.97 10.5 3 8c.03-2.72 1.49-6 4.5-6C9.37 2 10 3.8 10 5.5c0 3.11-2 5.66-2 8.5V16a2 2 0 0 1-2 2 2 2 0 0 1-2-2z" />
+            <path d="M20 20v-2.38c0-2.12 1.03-3.12 1-5.62-.03-2.72-1.49-6-4.5-6C14.63 6 14 7.8 14 9.5c0 3.11 2 5.66 2 8.5V20a2 2 0 0 0 2 2 2 2 0 0 0 2-2z" />
+          </g>
+        ),
+        sun: (
+          <g>
+            <circle cx="12" cy="12" r="4" />
+            <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" />
+          </g>
+        ),
+        shield: <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10" />,
+        bell: (
+          <g>
+            <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
+            <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
+          </g>
+        ),
+        settings: (
+          <g>
+            <circle cx="12" cy="12" r="3" />
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+          </g>
+        ),
+        user: (
+          <g>
+            <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+            <circle cx="12" cy="7" r="4" />
+          </g>
+        ),
+        plus: <path d="M5 12h14M12 5v14" />,
+        check: <path d="M20 6 9 17l-5-5" />,
+        chevronDown: <path d="m6 9 6 6 6-6" />,
+        chevronRight: <path d="m9 18 6-6-6-6" />,
+        refresh: (
+          <g>
+            <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+            <path d="M3 3v5h5" />
+            <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16" />
+            <path d="M16 21h5v-5" />
+          </g>
+        ),
+        download: (
+          <g>
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+            <polyline points="7 10 12 15 17 10" />
+            <line x1="12" x2="12" y1="15" y2="3" />
+          </g>
+        ),
+        zap: <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />,
+        trendingUp: (
+          <g>
+            <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" />
+            <polyline points="16 7 22 7 22 13" />
+          </g>
+        ),
+        alertTriangle: (
+          <g>
+            <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
+            <line x1="12" x2="12" y1="9" y2="13" />
+            <line x1="12" x2="12.01" y1="17" y2="17" />
+          </g>
+        ),
+        arrowUpRight: <path d="M7 7h10v10M7 17 17 7" />,
+        arrowDownRight: <path d="m7 7 10 10M17 7v10H7" />,
+        award: (
+          <g>
+            <circle cx="12" cy="8" r="6" />
+            <path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11" />
+          </g>
+        ),
+        compass: (
+          <g>
+            <circle cx="12" cy="12" r="10" />
+            <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" />
+          </g>
+        ),
+        x: <path d="M18 6 6 18M6 6l12 12" />,
+        search: (
+          <g>
+            <circle cx="11" cy="11" r="8" />
+            <path d="m21 21-4.3-4.3" />
+          </g>
+        ),
+        volume2: (
+          <g>
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+            <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
+            <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
+          </g>
+        ),
+        volumeX: (
+          <g>
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+            <line x1="22" x2="16" y1="9" y2="15" />
+            <line x1="16" x2="22" y1="9" y2="15" />
+          </g>
+        ),
+        watch: (
+          <g>
+            <circle cx="12" cy="12" r="7" />
+            <polyline points="12 9 12 12 13.5 13.5" />
+            <path d="M16.51 17.35l-.35 3.83a2 2 0 0 1-2 1.82H9.83a2 2 0 0 1-2-1.82l-.35-3.83m.02-10.7l.35-3.83A2 2 0 0 1 9.83 1h4.34a2 2 0 0 1 2 1.82l.35 3.83" />
+          </g>
+        ),
+        menu: (
+          <g>
+            <line x1="4" x2="20" y1="12" y2="12" />
+            <line x1="4" x2="20" y1="6" y2="6" />
+            <line x1="4" x2="20" y1="18" y2="18" />
+          </g>
+        ),
+        sparkles: (
+          <path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z" />
+        ),
+        cpu: (
+          <g>
+            <rect width="16" height="16" x="4" y="4" rx="2" />
+            <rect width="6" height="6" x="9" y="9" rx="1" />
+            <path d="M15 2v2M15 20v2M2 15h2M2 9h2M20 15h2M20 9h2M9 2v2M9 20v2" />
+          </g>
+        ),
+        thermometer: (
+          <path d="M14 4v10.54a4 4 0 1 1-4 0V4a2 2 0 0 1 4 0Z" />
+        ),
+        calendar: (
+          <g>
+            <rect width="18" height="18" x="3" y="4" rx="2" ry="2" />
+            <line x1="16" x2="16" y1="2" y2="6" />
+            <line x1="8" x2="8" y1="2" y2="6" />
+            <line x1="3" x2="21" y1="10" y2="10" />
+          </g>
+        )
+      };
+
+      return (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width={size}
+          height={size}
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className={className}
+        >
+          {icons[name] || icons.activity}
+        </svg>
+      );
+    };
+
+    // ==========================================
+    // REAL-TIME CANVAS ECG WAVEFORM MONITOR
+    // Simulates realistic physiological P-Q-R-S-T cardiac cycle
+    // ==========================================
+    const ECGWaveform = ({ bpm = 64, isStreaming = true }) => {
+      const canvasRef = useRef(null);
+
+      useEffect(() => {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        let animationFrameId;
+        const width = canvas.width;
+        const height = canvas.height;
+        const midY = height / 2;
+
+        const points = [];
+        let cycleTime = 0;
+
+        const getECGSample = (phase) => {
+          if (phase > 0.15 && phase < 0.25) {
+            return Math.sin((phase - 0.15) * 10 * Math.PI) * 5; // P wave
+          } else if (phase >= 0.32 && phase < 0.34) {
+            return -6; // Q dip
+          } else if (phase >= 0.34 && phase < 0.38) {
+            return 32; // R spike
+          } else if (phase >= 0.38 && phase < 0.41) {
+            return -10; // S dip
+          } else if (phase > 0.48 && phase < 0.65) {
+            return Math.sin((phase - 0.48) * 5.88 * Math.PI) * 9; // T wave
+          }
+          return (Math.random() - 0.5) * 1.2; // Baseline
+        };
+
+        const render = () => {
+          const beatDuration = Math.max(30, (60 / Math.max(40, bpm)) * 50);
+          cycleTime = (cycleTime + 1) % beatDuration;
+          const phase = cycleTime / beatDuration;
+          const sample = getECGSample(phase);
+
+          points.push(sample);
+          if (points.length > width) {
+            points.shift();
+          }
+
+          // Clear trail
+          ctx.fillStyle = 'rgba(10, 16, 28, 0.25)';
+          ctx.fillRect(0, 0, width, height);
+
+          // Grid lines
+          ctx.strokeStyle = 'rgba(0, 245, 255, 0.05)';
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          for (let gy = 10; gy < height; gy += 15) {
+            ctx.moveTo(0, gy);
+            ctx.lineTo(width, gy);
+          }
+          ctx.stroke();
+
+          // Waveform
+          ctx.beginPath();
+          ctx.strokeStyle = '#00F5FF';
+          ctx.lineWidth = 2;
+          ctx.shadowColor = '#00F5FF';
+          ctx.shadowBlur = 8;
+
+          for (let i = 0; i < points.length; i++) {
+            const px = i;
+            const py = midY - points[i];
+            if (i === 0) ctx.moveTo(px, py);
+            else ctx.lineTo(px, py);
+          }
+          ctx.stroke();
+          ctx.shadowBlur = 0;
+
+          // Scanning sweep head
+          if (points.length > 0) {
+            const headX = points.length - 1;
+            const headY = midY - points[headX];
+            ctx.fillStyle = '#FFFFFF';
+            ctx.shadowColor = '#00F5FF';
+            ctx.shadowBlur = 10;
+            ctx.beginPath();
+            ctx.arc(headX, headY, 3, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.shadowBlur = 0;
+          }
+
+          animationFrameId = requestAnimationFrame(render);
+        };
+
+        render();
+        return () => cancelAnimationFrame(animationFrameId);
+      }, [bpm, isStreaming]);
+
+      return (
+        <div className="relative w-full h-20 rounded-xl overflow-hidden bg-slate-950/70 border border-cyan-500/20">
+          <canvas ref={canvasRef} width={340} height={80} className="w-full h-full block ecg-canvas" />
+          <div className="absolute top-2 left-2 flex items-center space-x-1.5 text-[10px] font-mono text-cyan-400 bg-cyan-950/60 px-2 py-0.5 rounded-full border border-cyan-500/30">
+            <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping" />
+            <span>LEAD II • ECG 500Hz</span>
+          </div>
+          <div className="absolute bottom-1.5 right-2 text-[9px] font-mono text-slate-500">
+            25mm/s • 10mm/mV
+          </div>
+        </div>
+      );
+    };
+
+    // ==========================================
+    // RECHARTS & BESPOKE HYBRID CHART COMPONENT
+    // Seamlessly leverages Recharts when present, with native SVG fallback
+    // ==========================================
+    const DualTelemetryChart = ({ data, metricKey, color = "#00F5FF", height = 240, unit = "" }) => {
+      const [hoveredIdx, setHoveredIdx] = useState(null);
+
+      // Check if Recharts UMD is available in window
+      const hasRecharts = typeof window.Recharts !== 'undefined';
+
+      if (hasRecharts) {
+        const { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid } = window.Recharts;
+        return (
+          <div style={{ width: '100%', height }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <defs>
+                  <linearGradient id={`grad-${metricKey}`} x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor={color} stopOpacity={0.4} />
+                    <stop offset="95%" stopColor={color} stopOpacity={0.0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.05)" vertical={false} />
+                <XAxis dataKey="time" stroke="#64748B" fontSize={11} tickLine={false} axisLine={false} />
+                <YAxis stroke="#64748B" fontSize={11} tickLine={false} axisLine={false} />
+                <Tooltip
+                  content={({ active, payload, label }) => {
+                    if (active && payload && payload.length) {
+                      return (
+                        <div className="bg-slate-900/95 border border-slate-700 p-2.5 rounded-xl shadow-xl text-xs backdrop-blur-md">
+                          <p className="text-[10px] text-slate-400 font-mono">{label || payload[0].payload.day}</p>
+                          <p className="text-white font-bold flex items-center gap-1 mt-0.5">
+                            <span style={{ color }}>{payload[0].value}</span>
+                            <span className="text-[10px] text-slate-400 font-normal">{unit}</span>
+                          </p>
+                        </div>
+                      );
+                    }
+                    return null;
+                  }}
+                />
+                <Area
+                  type="monotone"
+                  dataKey={metricKey}
+                  stroke={color}
+                  strokeWidth={2.5}
+                  fillOpacity={1}
+                  fill={`url(#grad-${metricKey})`}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        );
+      }
+
+      // Native High-Precision SVG Fallback
+      const values = data.map(d => d[metricKey]);
+      const minVal = Math.min(...values) * 0.92;
+      const maxVal = Math.max(...values) * 1.08;
+      const range = maxVal - minVal || 1;
+
+      const points = data.map((d, i) => {
+        const x = (i / (data.length - 1)) * 100;
+        const y = 100 - ((d[metricKey] - minVal) / range) * 80 - 10;
+        return { x, y, ...d };
+      });
+
+      const pathString = points.reduce((acc, p, i) => (i === 0 ? `M ${p.x} ${p.y}` : `${acc} L ${p.x} ${p.y}`), "");
+      const areaString = `${pathString} L 100 100 L 0 100 Z`;
+
+      return (
+        <div className="relative w-full select-none" style={{ height }}>
+          <svg className="w-full h-full overflow-visible" viewBox="0 0 100 100" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id={`grad-fallback-${metricKey}`} x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor={color} stopOpacity="0.4" />
+                <stop offset="100%" stopColor={color} stopOpacity="0.0" />
+              </linearGradient>
+            </defs>
+            <line x1="0" y1="20" x2="100" y2="20" stroke="rgba(255,255,255,0.06)" strokeWidth="0.5" strokeDasharray="2 2" />
+            <line x1="0" y1="50" x2="100" y2="50" stroke="rgba(255,255,255,0.06)" strokeWidth="0.5" strokeDasharray="2 2" />
+            <line x1="0" y1="80" x2="100" y2="80" stroke="rgba(255,255,255,0.06)" strokeWidth="0.5" strokeDasharray="2 2" />
+
+            <path d={areaString} fill={`url(#grad-fallback-${metricKey})`} />
+            <path d={pathString} fill="none" stroke={color} strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+
+            {hoveredIdx !== null && (
+              <>
+                <line x1={points[hoveredIdx].x} y1="0" x2={points[hoveredIdx].x} y2="100" stroke="rgba(255, 255, 255, 0.4)" strokeWidth="0.75" strokeDasharray="2 2" />
+                <circle cx={points[hoveredIdx].x} cy={points[hoveredIdx].y} r="3.5" fill="#FFFFFF" stroke={color} strokeWidth="2" />
+              </>
+            )}
+          </svg>
+
+          <div className="absolute inset-0 flex">
+            {points.map((p, i) => (
+              <div
+                key={i}
+                className="flex-1 h-full cursor-pointer"
+                onMouseEnter={() => {
+                  setHoveredIdx(i);
+                  playHapticTone('click');
+                }}
+                onMouseLeave={() => setHoveredIdx(null)}
+              />
+            ))}
+          </div>
+
+          {hoveredIdx !== null && (
+            <div
+              className="absolute pointer-events-none transform -translate-x-1/2 -translate-y-full mb-3 bg-slate-900/95 text-white border border-slate-700/80 px-3 py-1.5 rounded-lg shadow-xl text-xs z-20 backdrop-blur-md font-mono"
+              style={{ left: `${points[hoveredIdx].x}%`, top: `${points[hoveredIdx].y}%` }}
+            >
+              <div className="text-[10px] text-slate-400">{points[hoveredIdx].time || points[hoveredIdx].day}</div>
+              <div className="font-bold flex items-center space-x-1">
+                <span style={{ color }}>{points[hoveredIdx][metricKey]}</span>
+                <span className="text-[10px] text-slate-400 font-normal">{unit}</span>
+              </div>
+            </div>
+          )}
+
+          <div className="flex justify-between text-[11px] font-mono text-slate-400 mt-2 px-1">
+            <span>{data[0]?.time || data[0]?.day}</span>
+            <span>{data[Math.floor(data.length / 2)]?.time || data[Math.floor(data.length / 2)]?.day}</span>
+            <span>{data[data.length - 1]?.time || data[data.length - 1]?.day}</span>
+          </div>
+        </div>
+      );
+    };
+
+    // ==========================================
+    // WEEKLY TREND COMPARATIVE BAR CHART
+    // ==========================================
+    const WeeklyTrendChart = ({ data }) => {
+      const hasRecharts = typeof window.Recharts !== 'undefined';
+
+      if (hasRecharts) {
+        const { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid } = window.Recharts;
+        return (
+          <div style={{ width: '100%', height: 200 }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.05)" vertical={false} />
+                <XAxis dataKey="day" stroke="#64748B" fontSize={11} tickLine={false} axisLine={false} />
+                <YAxis stroke="#64748B" fontSize={11} tickLine={false} axisLine={false} />
+                <Tooltip
+                  content={({ active, payload, label }) => {
+                    if (active && payload && payload.length) {
+                      return (
+                        <div className="bg-slate-900/95 border border-slate-700 p-2.5 rounded-xl shadow-xl text-xs backdrop-blur-md">
+                          <p className="text-[10px] text-slate-400 font-mono">{label}</p>
+                          <p className="text-cyan-400 font-bold mt-0.5">Steps: {payload[0].value.toLocaleString()}</p>
+                          <p className="text-amber-400 text-[10px] font-mono">Strain: {payload[0].payload.strain}</p>
+                        </div>
+                      );
+                    }
+                    return null;
+                  }}
+                />
+                <Bar dataKey="steps" fill="#00F5FF" radius={[6, 6, 0, 0]} opacity={0.85} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        );
+      }
+
+      // Native fallback
+      const maxSteps = Math.max(...data.map(d => d.steps));
+      return (
+        <div className="h-48 w-full flex items-end gap-2 pt-4 px-2">
+          {data.map((d, i) => {
+            const hPct = (d.steps / maxSteps) * 100;
+            return (
+              <div key={i} className="flex-1 flex flex-col items-center h-full justify-end group relative">
+                <div
+                  style={{ height: `${hPct}%` }}
+                  className="w-full bg-cyan-400/80 hover:bg-cyan-400 rounded-t-md transition-all shadow-glow-cyan"
+                />
+                <span className="text-[10px] font-mono text-slate-400 mt-2">{d.day}</span>
+              </div>
+            );
+          })}
+        </div>
+      );
+    };
+
+    // ==========================================
+    // CIRCADIAN SLEEP HYPNOGRAM
+    // ==========================================
+    const SleepHypnogram = () => {
+      const stages = [
+        { time: '23:00', stage: 'Awake', level: 4, color: '#F43F5E' },
+        { time: '23:30', stage: 'Light', level: 2, color: '#38BDF8' },
+        { time: '00:15', stage: 'Deep', level: 1, color: '#8B5CF6' },
+        { time: '01:30', stage: 'Light', level: 2, color: '#38BDF8' },
+        { time: '02:00', stage: 'REM', level: 3, color: '#00F5FF' },
+        { time: '03:10', stage: 'Deep', level: 1, color: '#8B5CF6' },
+        { time: '04:30', stage: 'REM', level: 3, color: '#00F5FF' },
+        { time: '05:40', stage: 'Light', level: 2, color: '#38BDF8' },
+        { time: '06:15', stage: 'REM', level: 3, color: '#00F5FF' },
+        { time: '06:48', stage: 'Awake', level: 4, color: '#F43F5E' },
+      ];
+
+      return (
+        <div className="w-full space-y-3">
+          <div className="flex flex-wrap items-center justify-between text-xs text-slate-400 pb-1 gap-2">
+            <span className="font-mono text-slate-300">Hypnogram Architecture</span>
+            <div className="flex items-center space-x-3 text-[11px]">
+              <span className="flex items-center space-x-1"><span className="w-2 h-2 rounded-full bg-[#8B5CF6]"></span><span>Deep (24%)</span></span>
+              <span className="flex items-center space-x-1"><span className="w-2 h-2 rounded-full bg-[#00F5FF]"></span><span>REM (27%)</span></span>
+              <span className="flex items-center space-x-1"><span className="w-2 h-2 rounded-full bg-[#38BDF8]"></span><span>Light (44%)</span></span>
+              <span className="flex items-center space-x-1"><span className="w-2 h-2 rounded-full bg-[#F43F5E]"></span><span>Awake (5%)</span></span>
+            </div>
+          </div>
+          
+          <div className="h-32 w-full flex items-end gap-1.5 p-2 bg-slate-950/60 rounded-xl border border-white/5">
+            {stages.map((st, i) => {
+              const heightPct = (st.level / 4) * 100;
+              return (
+                <div key={i} className="flex-1 flex flex-col items-center h-full justify-end group relative">
+                  <div
+                    style={{ height: `${heightPct}%`, backgroundColor: st.color }}
+                    className="w-full rounded-t-sm transition-all duration-300 group-hover:brightness-125 opacity-85 group-hover:opacity-100"
+                  />
+                  <div className="opacity-0 group-hover:opacity-100 transition-opacity absolute -top-8 bg-slate-900 border border-slate-700 text-white text-[10px] px-2 py-0.5 rounded shadow pointer-events-none whitespace-nowrap z-20 font-mono">
+                    {st.time} • {st.stage}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          <div className="flex justify-between text-[10px] font-mono text-slate-500 px-1">
+            <span>11:00 PM (Bedtime)</span>
+            <span>03:00 AM (Deep Dip)</span>
+            <span>06:48 AM (Awake)</span>
+          </div>
+        </div>
+      );
+    };
+
+    // ==========================================
+    // CIRCULAR READINESS GAUGE
+    // ==========================================
+    const CircularGauge = ({ score = 92, label = "Readiness Score", subtitle = "Prime Condition" }) => {
+      const radius = 58;
+      const circumference = 2 * Math.PI * radius;
+      const strokeDashoffset = circumference - (score / 100) * circumference;
+
+      return (
+        <div className="flex flex-col items-center justify-center p-3">
+          <div className="relative w-36 h-36 flex items-center justify-center">
+            <svg className="w-full h-full transform -rotate-90">
+              <circle
+                cx="72"
+                cy="72"
+                r={radius}
+                className="text-slate-800/80 stroke-current"
+                strokeWidth="10"
+                fill="transparent"
+              />
+              <circle
+                cx="72"
+                cy="72"
+                r={radius}
+                stroke="#10B981"
+                strokeWidth="10"
+                strokeDasharray={circumference}
+                strokeDashoffset={strokeDashoffset}
+                strokeLinecap="round"
+                fill="transparent"
+                style={{
+                  transition: 'stroke-dashoffset 1.5s cubic-bezier(0.16, 1, 0.3, 1)',
+                  filter: 'drop-shadow(0 0 8px rgba(16, 185, 129, 0.5))'
+                }}
+              />
+            </svg>
+            <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
+              <span className="text-3xl font-extrabold tracking-tight font-mono text-white">{score}</span>
+              <span className="text-[10px] font-semibold text-emerald-400 uppercase tracking-widest">/ 100</span>
+            </div>
+          </div>
+          <div className="text-center mt-2">
+            <h4 className="text-sm font-semibold text-slate-200">{label}</h4>
+            <p className="text-xs text-emerald-400 font-mono mt-0.5">{subtitle}</p>
+          </div>
+        </div>
+      );
+    };
+
+    // ==========================================
+    // MASTER APPLICATION ORCHESTRATOR
+    // ==========================================
+    const App = () => {
+      // System States
+      const [isDark, setIsDark] = useState(true);
+      const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+      const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+      const [soundEnabled, setSoundEnabled] = useState(true);
+      const [isLiveStreaming, setIsLiveStreaming] = useState(true);
+      const [activeTab, setActiveTab] = useState('overview');
+      const [dateFilter, setDateFilter] = useState('7D');
+      const [activeChartMetric, setActiveChartMetric] = useState('heartRate');
+
+      // Modals
+      const [showActivityModal, setShowActivityModal] = useState(false);
+      const [showProfileModal, setShowProfileModal] = useState(false);
+      const [showNotifications, setShowNotifications] = useState(false);
+      const [showGoalModal, setShowGoalModal] = useState(false);
+      const [toastMessage, setToastMessage] = useState(null);
+
+      // AI Diagnostics State
+      const [aiQuery, setAiQuery] = useState("");
+      const [aiResponse, setAiResponse] = useState(null);
+      const [isAiLoading, setIsAiLoading] = useState(false);
+
+      // Core Dynamic Telemetry Data (Realistic clinical demo data)
+      const [vitals, setVitals] = useState({
+        heartRate: 64,
+        restingHR: 56,
+        hrv: 74,
+        steps: 11420,
+        stepGoal: 12000,
+        calories: 642,
+        calorieGoal: 850,
+        sleepScore: 89,
+        sleepDuration: '7h 48m',
+        hydration: 2750,
+        hydrationGoal: 3200,
+        strainScore: 14.2,
+        spO2: 98.8,
+        respRate: 13.6,
+        skinTempVar: -0.2,
+        bloodPressure: "118 / 76",
+      });
+
+      // Goals Config
+      const [goals, setGoals] = useState([
+        { id: 'burn', label: 'Weekly Active Caloric Burn', current: 4850, target: 6000, unit: 'kcal', color: 'cyan' },
+        { id: 'sleep', label: 'Consistent Sleep Window', current: 6, target: 7, unit: 'days', color: 'violet' },
+        { id: 'hydration', label: 'Daily Hydration Intake', current: 2750, target: 3200, unit: 'mL', color: 'blue' },
+        { id: 'zone2', label: 'Aerobic Zone 2 Cardio Time', current: 148, target: 150, unit: 'min', color: 'emerald' },
+      ]);
+
+      // Activity Sessions
+      const [activities, setActivities] = useState([
+        { id: 1, type: 'Trail Run', icon: 'activity', duration: '48 min', calories: 420, strain: 12.8, time: '07:15 AM', status: 'Completed', hrAvg: '144 bpm' },
+        { id: 2, type: 'Breathwork & Yoga', icon: 'zap', duration: '20 min', calories: 65, strain: 4.1, time: '12:45 PM', status: 'Completed', hrAvg: '68 bpm' },
+        { id: 3, type: 'Strength Hypertrophy', icon: 'flame', duration: '55 min', calories: 380, strain: 13.4, time: '05:30 PM', status: 'Completed', hrAvg: '128 bpm' },
+      ]);
+
+      // Notifications
+      const [notifications, setNotifications] = useState([
+        { id: 1, title: 'Optimal Recovery Window', text: 'HRV surged +14ms overnight. Ready for high strain workout.', time: '1h ago', type: 'success', read: false },
+        { id: 2, title: 'Hydration Pacing', text: 'You are 450 mL ahead of your typical Thursday benchmark.', time: '3h ago', type: 'info', read: false },
+        { id: 3, title: 'Wearable Sync Complete', text: 'Oura Ring Gen 4 & Apple Watch Ultra synced 31 telemetry points.', time: '5h ago', type: 'default', read: true },
+      ]);
+
+      // Sync dark mode class to HTML element
+      useEffect(() => {
+        if (isDark) {
+          document.documentElement.classList.add('dark');
+          document.documentElement.classList.remove('light');
+        } else {
+          document.documentElement.classList.remove('dark');
+          document.documentElement.classList.add('light');
+        }
+      }, [isDark]);
+
+      // Keyboard shortcuts: ESC closes modals, Ctrl+B toggles sidebar
+      useEffect(() => {
+        const handleKeyDown = (e) => {
+          if (e.key === 'Escape') {
+            setShowActivityModal(false);
+            setShowProfileModal(false);
+            setShowNotifications(false);
+            setShowGoalModal(false);
+          } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'b') {
+            e.preventDefault();
+            setSidebarCollapsed(prev => !prev);
+          }
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+      }, []);
+
+      // Chart Telemetry Datasets based on timeframe
+      const chartDatasets = useMemo(() => {
+        return {
+          '24H': [
+            { time: '00:00', heartRate: 54, hrv: 82, strain: 1.2, hydration: 0, steps: 0 },
+            { time: '03:00', heartRate: 52, hrv: 88, strain: 1.2, hydration: 0, steps: 0 },
+            { time: '06:00', heartRate: 61, hrv: 76, strain: 2.5, hydration: 350, steps: 140 },
+            { time: '07:30', heartRate: 146, hrv: 42, strain: 9.4, hydration: 800, steps: 4800 },
+            { time: '10:00', heartRate: 72, hrv: 68, strain: 10.1, hydration: 1300, steps: 6100 },
+            { time: '13:00', heartRate: 68, hrv: 70, strain: 11.2, hydration: 1800, steps: 7800 },
+            { time: '16:00', heartRate: 78, hrv: 65, strain: 12.0, hydration: 2200, steps: 9400 },
+            { time: '18:00', heartRate: 132, hrv: 48, strain: 14.2, hydration: 2750, steps: 11420 },
+            { time: '21:00', heartRate: 64, hrv: 74, strain: 14.2, hydration: 2750, steps: 11420 },
+          ],
+          '7D': [
+            { day: 'Fri', time: 'Fri', heartRate: 62, hrv: 71, strain: 12.4, steps: 10840, hydration: 2900 },
+            { day: 'Sat', time: 'Sat', heartRate: 60, hrv: 78, strain: 15.6, steps: 14200, hydration: 3400 },
+            { day: 'Sun', time: 'Sun', heartRate: 58, hrv: 84, strain: 8.2, steps: 8900, hydration: 2600 },
+            { day: 'Mon', time: 'Mon', heartRate: 65, hrv: 69, strain: 13.9, steps: 11950, hydration: 3100 },
+            { day: 'Tue', time: 'Tue', heartRate: 63, hrv: 73, strain: 14.5, steps: 12400, hydration: 3050 },
+            { day: 'Wed', time: 'Wed', heartRate: 61, hrv: 77, strain: 11.8, steps: 10200, hydration: 2850 },
+            { day: 'Today', time: 'Today', heartRate: 64, hrv: 74, strain: 14.2, steps: 11420, hydration: 2750 },
+          ],
+          '30D': [
+            { day: 'Wk 1', time: 'Wk 1', heartRate: 62, hrv: 72, strain: 13.1, steps: 11200, hydration: 2950 },
+            { day: 'Wk 2', time: 'Wk 2', heartRate: 60, hrv: 76, strain: 14.4, steps: 12350, hydration: 3100 },
+            { day: 'Wk 3', time: 'Wk 3', heartRate: 59, hrv: 79, strain: 12.8, steps: 11800, hydration: 3000 },
+            { day: 'Wk 4', time: 'Wk 4', heartRate: 58, hrv: 82, strain: 13.9, steps: 12500, hydration: 3200 },
+          ]
+        };
+      }, []);
+
+      // Real-time telemetry generator (Live stream mode)
+      useEffect(() => {
+        if (!isLiveStreaming) return;
+        const interval = setInterval(() => {
+          setVitals(prev => {
+            const hrJitter = (Math.random() - 0.5) * 3;
+            const newHR = Math.round(Math.min(95, Math.max(58, prev.heartRate + hrJitter)));
+            const stepIncrement = Math.random() > 0.4 ? Math.floor(Math.random() * 5) + 1 : 0;
+            const calorieIncrement = stepIncrement > 0 ? (stepIncrement * 0.04) : 0;
+
+            return {
+              ...prev,
+              heartRate: newHR,
+              steps: prev.steps + stepIncrement,
+              calories: Math.round((prev.calories + calorieIncrement) * 10) / 10,
+            };
+          });
+        }, 2200);
+
+        return () => clearInterval(interval);
+      }, [isLiveStreaming]);
+
+      // Sound wrapper
+      const triggerSound = (type) => {
+        if (soundEnabled) playHapticTone(type);
+      };
+
+      // Toast feedback helper
+      const showToast = (msg) => {
+        setToastMessage(msg);
+        triggerSound('chime');
+        setTimeout(() => setToastMessage(null), 3500);
+      };
+
+      // Hydration logger
+      const addHydration = (amount) => {
+        setVitals(prev => {
+          const next = Math.min(prev.hydrationGoal * 1.5, prev.hydration + amount);
+          return { ...prev, hydration: next };
+        });
+        showToast(`+${amount} mL Logged! Current Intake: ${vitals.hydration + amount} mL`);
+      };
+
+      // Export Comprehensive Health Report
+      const handleExportReport = () => {
+        triggerSound('chime');
+        const report = {
+          system: "AURA BioSync Health Intelligence OS",
+          exportTimestamp: new Date().toISOString(),
+          user: {
+            name: "Guda Prahalad",
+            athleteTier: "Elite Human Performance",
+            vo2Max: 54.2,
+            biologicalAge: 24,
+            chronologicalAge: 28,
+            bloodPressure: vitals.bloodPressure,
+          },
+          currentBiometrics: vitals,
+          recentActivities: activities,
+          sevenDayTrends: chartDatasets['7D'],
+          complianceNote: "DEMO CLINICAL DATASET • FOR PERFORMANCE SIMULATION ONLY"
+        };
+
+        const blob = new Blob([JSON.stringify(report, null, 2)], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `BioSync_Health_Report_${new Date().toISOString().slice(0, 10)}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        showToast("✓ Clinical Health Report JSON Downloaded Successfully!");
+      };
+
+      // Quick AI Diagnostic Assistant
+      const handleAiDiagnostic = (e) => {
+        e.preventDefault();
+        if (!aiQuery.trim()) return;
+        setIsAiLoading(true);
+        triggerSound('click');
+
+        setTimeout(() => {
+          setIsAiLoading(false);
+          const q = aiQuery.toLowerCase();
+          let answer = "";
+          if (q.includes("sleep") || q.includes("rem") || q.includes("tired")) {
+            answer = "Sleep Architecture Analysis: Your deep sleep accounted for 1h 52m (24% of total time), meeting clinical hyper-recovery benchmarks. REM latency was 82 minutes, indicating low late-evening neurological fatigue. Recommendation: Maintain room ambient temperature at 19°C tonight.";
+          } else if (q.includes("heart") || q.includes("hrv") || q.includes("cardio") || q.includes("rate")) {
+            answer = "Cardiac Autonomic Metric: Your HRV of 74ms reflects strong parasympathetic tone. Your resting heart rate of 56 BPM sits in the top 3rd percentile for adult athletes. You have sufficient autonomic capacity for a VO2 Max high-threshold interval session today.";
+          } else if (q.includes("hydrate") || q.includes("water") || q.includes("drink")) {
+            answer = "Hydration Intelligence: Current fluid deficit stands at 450 mL against your sweat rate from the 07:15 AM Trail Run. Suggest consuming 350 mL mineralized water with 250mg sodium & 100mg magnesium prior to 16:00.";
+          } else {
+            answer = `Bio-Insight Summary: Based on your current 14.2 Strain Score and 89 Sleep Index, your readiness remains primed. Vital signs show baseline stability across SpO2 (98.8%) and cardiac output. Keep caloric refeed balanced at ~2,400 kcal.`;
+          }
+          setAiResponse(answer);
+          triggerSound('chime');
+        }, 700);
+      };
+
+      // Handle new activity submission
+      const handleLogActivity = (newAct) => {
+        setActivities(prev => [newAct, ...prev]);
+        setVitals(prev => ({
+          ...prev,
+          calories: prev.calories + Number(newAct.calories),
+          strainScore: Math.round((prev.strainScore + (newAct.strain / 10)) * 10) / 10
+        }));
+        setShowActivityModal(false);
+        showToast(`Logged: ${newAct.type} (+${newAct.calories} kcal)`);
+      };
+
+      return (
+        <div className={`min-h-screen flex flex-col md:flex-row transition-colors duration-300 ${isDark ? 'dark bg-[#080C14] text-slate-100' : 'light bg-slate-50 text-slate-900'}`}>
+          {/* Background Ambient Glow & Cyber Grid */}
+          <div className="fixed inset-0 bg-grid-pattern pointer-events-none opacity-40 z-0" />
+          <div className="fixed top-[-10%] left-[20%] w-[500px] h-[500px] rounded-full bg-cyan-500/10 dark:bg-cyan-500/5 blur-[120px] pointer-events-none" />
+          <div className="fixed bottom-[-10%] right-[10%] w-[600px] h-[600px] rounded-full bg-violet-600/10 dark:bg-violet-600/5 blur-[140px] pointer-events-none" />
+
+          {/* ========================================================= */}
+          {/* COLLAPSIBLE SIDEBAR */}
+          {/* ========================================================= */}
+          <aside className={`relative z-30 flex flex-col border-r border-slate-800/80 dark:border-white/5 transition-all duration-300 glass-panel ${
+            sidebarCollapsed ? 'w-20' : 'w-64'
+          } ${mobileMenuOpen ? 'fixed inset-y-0 left-0 w-64 shadow-2xl' : 'hidden md:flex'}`}>
+            {/* Brand Logo & Version Header */}
+            <div className="h-16 flex items-center justify-between px-4 border-b border-slate-800/80 dark:border-white/5">
+              {!sidebarCollapsed && (
+                <div className="flex items-center space-x-2.5 overflow-hidden">
+                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center shadow-glow-cyan">
+                    <Icon name="activity" size={18} className="text-black font-bold" />
+                  </div>
+                  <div>
+                    <h1 className="font-extrabold text-sm tracking-wider text-white flex items-center gap-1.5 font-mono">
+                      <span>AURA</span>
+                      <span className="text-[10px] bg-cyan-500/20 text-cyan-400 px-1.5 py-0.2 rounded border border-cyan-500/30">v4.8</span>
+                    </h1>
+                    <p className="text-[9px] text-slate-400 tracking-wider uppercase font-mono">BioSync OS</p>
+                  </div>
+                </div>
+              )}
+              {sidebarCollapsed && (
+                <div className="w-8 h-8 mx-auto rounded-lg bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center shadow-glow-cyan">
+                  <Icon name="activity" size={18} className="text-black font-bold" />
+                </div>
+              )}
+
+              {/* Sidebar toggle button (desktop) */}
+              <button
+                onClick={() => {
+                  setSidebarCollapsed(!sidebarCollapsed);
+                  triggerSound('click');
+                }}
+                className="hidden md:flex p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors"
+                title="Toggle Sidebar (Ctrl+B)"
+              >
+                <Icon name={sidebarCollapsed ? "chevronRight" : "menu"} size={16} />
+              </button>
+
+              {/* Mobile Close Button */}
+              <button
+                onClick={() => setMobileMenuOpen(false)}
+                className="md:hidden p-1.5 rounded-lg text-slate-400 hover:text-white"
+              >
+                <Icon name="x" size={18} />
+              </button>
+            </div>
+
+            {/* Navigation Menu */}
+            <nav className="flex-1 py-4 px-3 space-y-1 overflow-y-auto">
+              {[
+                { id: 'overview', label: 'Telemetry Overview', icon: 'activity', badge: 'Live' },
+                { id: 'biometrics', label: 'Cardiac & Vitals', icon: 'heart' },
+                { id: 'sleep', label: 'Sleep Architecture', icon: 'moon' },
+                { id: 'activity', label: 'Strain & Activity', icon: 'flame' },
+                { id: 'hydration', label: 'Fluid & Nutrition', icon: 'droplets' },
+                { id: 'goals', label: 'Target Milestones', icon: 'award' },
+                { id: 'insights', label: 'AI Health Core', icon: 'sparkles', badge: 'AI' },
+              ].map(item => {
+                const isActive = activeTab === item.id;
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => {
+                      setActiveTab(item.id);
+                      setMobileMenuOpen(false);
+                      triggerSound('click');
+                    }}
+                    className={`w-full flex items-center px-3 py-2.5 rounded-xl text-xs font-medium transition-all group relative ${
+                      isActive
+                        ? 'bg-cyan-500/15 text-cyan-400 border border-cyan-500/30 shadow-glow-cyan'
+                        : 'text-slate-400 hover:text-slate-200 hover:bg-white/5'
+                    }`}
+                  >
+                    <Icon name={item.icon} size={18} className={`shrink-0 ${isActive ? 'text-cyan-400' : 'text-slate-400 group-hover:text-slate-200'}`} />
+                    {!sidebarCollapsed && (
+                      <span className="ml-3 truncate font-medium">{item.label}</span>
+                    )}
+                    {!sidebarCollapsed && item.badge && (
+                      <span className="ml-auto text-[9px] font-mono px-1.5 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/40">
+                        {item.badge}
+                      </span>
+                    )}
+
+                    {sidebarCollapsed && (
+                      <div className="absolute left-full ml-2 px-2.5 py-1 bg-slate-900 text-white text-xs rounded-md shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 border border-slate-700 font-mono">
+                        {item.label}
+                      </div>
+                    )}
+                  </button>
+                );
+              })}
+            </nav>
+
+            {/* Hardware Link Badge */}
+            <div className="p-3 border-t border-slate-800/80 dark:border-white/5">
+              {!sidebarCollapsed ? (
+                <div
+                  onClick={() => setShowProfileModal(true)}
+                  className="p-2.5 rounded-xl bg-slate-950/60 border border-white/5 cursor-pointer hover:border-cyan-500/30 transition-colors"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-mono text-slate-400 flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                      CONNECTED HARDWARE
+                    </span>
+                    <span className="text-[10px] font-mono text-emerald-400 font-bold">98%</span>
+                  </div>
+                  <div className="mt-1 text-[11px] font-semibold text-slate-200 truncate">Oura Ring Gen 4 + Apple Watch Ultra</div>
+                  <div className="text-[9px] text-slate-500">Latency: 12ms • Bluetooth LE 5.3</div>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setShowProfileModal(true)}
+                  className="w-full flex justify-center py-2 text-emerald-400"
+                  title="Hardware Linked: 98%"
+                >
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
+                </button>
+              )}
+            </div>
+
+            {/* User Profile Bar */}
+            <div className="p-3 border-t border-slate-800/80 dark:border-white/5 flex items-center">
+              <button
+                onClick={() => setShowProfileModal(true)}
+                className="flex items-center space-x-3 w-full p-1.5 rounded-lg hover:bg-white/5 transition-colors text-left"
+              >
+                <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-cyan-500 to-indigo-600 flex items-center justify-center font-bold text-xs text-white ring-2 ring-cyan-500/40 shrink-0">
+                  GP
+                </div>
+                {!sidebarCollapsed && (
+                  <div className="overflow-hidden">
+                    <div className="text-xs font-semibold text-white truncate">Guda Prahalad</div>
+                    <div className="text-[10px] font-mono text-cyan-400 truncate">VO2 Max: 54.2 • Elite</div>
+                  </div>
+                )}
+              </button>
+            </div>
+          </aside>
+
+          {/* ========================================================= */}
+          {/* MAIN DASHBOARD CONTENT AREA */}
+          {/* ========================================================= */}
+          <main className="flex-1 flex flex-col min-w-0 overflow-y-auto relative z-10">
+            {/* Top Navigation Bar */}
+            <header className="h-16 border-b border-slate-800/80 dark:border-white/5 px-4 sm:px-6 flex items-center justify-between glass-panel sticky top-0 z-20">
+              {/* Left: Mobile hamburger & Section Header */}
+              <div className="flex items-center space-x-3">
+                <button
+                  onClick={() => setMobileMenuOpen(true)}
+                  className="md:hidden p-2 rounded-xl text-slate-400 hover:text-white hover:bg-white/5"
+                >
+                  <Icon name="menu" size={18} />
+                </button>
+
+                <div>
+                  <h2 className="text-sm sm:text-base font-bold text-white tracking-tight flex items-center gap-2">
+                    <span>
+                      {activeTab === 'overview' && 'Clinical Performance Dashboard'}
+                      {activeTab === 'biometrics' && 'Cardiac Autonomic & Vital Telemetry'}
+                      {activeTab === 'sleep' && 'Circadian Sleep Architecture'}
+                      {activeTab === 'activity' && 'Strain Load & Work Capacity'}
+                      {activeTab === 'hydration' && 'Fluid Dynamics & Electrolyte Balance'}
+                      {activeTab === 'goals' && 'Target Health Milestones'}
+                      {activeTab === 'insights' && 'AI Health Diagnostics Core'}
+                    </span>
+                  </h2>
+                  <div className="flex items-center space-x-2 text-[10px] font-mono text-slate-400">
+                    <span className="inline-flex items-center gap-1 text-emerald-400">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+                      LIVE FEED
+                    </span>
+                    <span>•</span>
+                    <span>SUBJECT: #GP-8842-ELITE</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Right: Date filter, Live toggle, Tools */}
+              <div className="flex items-center space-x-2 sm:space-x-3">
+                {/* Timeframe Filter Buttons */}
+                <div className="hidden lg:flex items-center bg-slate-900/80 p-0.5 rounded-xl border border-white/5 text-xs font-mono">
+                  {['24H', '7D', '30D'].map(period => (
+                    <button
+                      key={period}
+                      onClick={() => {
+                        setDateFilter(period);
+                        triggerSound('click');
+                      }}
+                      className={`px-3 py-1 rounded-lg transition-all ${
+                        dateFilter === period
+                          ? 'bg-cyan-500 text-black font-bold shadow-glow-cyan'
+                          : 'text-slate-400 hover:text-white'
+                      }`}
+                    >
+                      {period}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Live Stream Toggle */}
+                <button
+                  onClick={() => {
+                    setIsLiveStreaming(!isLiveStreaming);
+                    triggerSound('click');
+                    showToast(isLiveStreaming ? "Live simulation paused" : "Live telemetry stream active");
+                  }}
+                  className={`hidden sm:flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-mono border transition-all ${
+                    isLiveStreaming
+                      ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30 shadow-glow-emerald'
+                      : 'bg-slate-800/50 text-slate-400 border-white/5 hover:text-white'
+                  }`}
+                  title="Toggle Live Physiological Jitter Simulation"
+                >
+                  <span className={`w-2 h-2 rounded-full ${isLiveStreaming ? 'bg-emerald-400 animate-pulse' : 'bg-slate-500'}`} />
+                  <span>{isLiveStreaming ? "STREAMING" : "PAUSED"}</span>
+                </button>
+
+                {/* Sound FX Toggle */}
+                <button
+                  onClick={() => {
+                    setSoundEnabled(!soundEnabled);
+                    if (!soundEnabled) playHapticTone('chime');
+                  }}
+                  className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 transition-colors border border-transparent hover:border-white/5"
+                  title={soundEnabled ? "Disable Haptic Audio Feedback" : "Enable Haptic Audio Feedback"}
+                >
+                  <Icon name={soundEnabled ? "volume2" : "volumeX"} size={16} />
+                </button>
+
+                {/* Dark / Light Toggle */}
+                <button
+                  onClick={() => {
+                    setIsDark(!isDark);
+                    triggerSound('click');
+                  }}
+                  className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 transition-colors border border-transparent hover:border-white/5"
+                  title="Toggle Light/Dark Theme"
+                >
+                  <Icon name={isDark ? "sun" : "moon"} size={16} />
+                </button>
+
+                {/* Notification Bell */}
+                <div className="relative">
+                  <button
+                    onClick={() => {
+                      setShowNotifications(!showNotifications);
+                      triggerSound('click');
+                    }}
+                    className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 transition-colors relative"
+                    title="Alerts & Insights"
+                  >
+                    <Icon name="bell" size={16} />
+                    {notifications.some(n => !n.read) && (
+                      <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
+                    )}
+                  </button>
+
+                  {/* Popover */}
+                  {showNotifications && (
+                    <div className="absolute right-0 mt-2 w-80 glass-panel rounded-2xl shadow-2xl p-4 border border-slate-700/80 z-50">
+                      <div className="flex items-center justify-between pb-2 border-b border-white/5">
+                        <span className="text-xs font-bold text-white uppercase tracking-wider font-mono">Physiological Alerts</span>
+                        <button
+                          onClick={() => {
+                            setNotifications(notifications.map(n => ({ ...n, read: true })));
+                            triggerSound('click');
+                          }}
+                          className="text-[10px] text-cyan-400 hover:underline"
+                        >
+                          Mark all read
+                        </button>
+                      </div>
+                      <div className="mt-2 space-y-2 max-h-60 overflow-y-auto">
+                        {notifications.map(n => (
+                          <div key={n.id} className={`p-2.5 rounded-xl border text-xs transition-colors ${n.read ? 'bg-slate-900/40 border-white/5 text-slate-400' : 'bg-cyan-950/40 border-cyan-500/30 text-slate-200'}`}>
+                            <div className="font-semibold text-white flex items-center justify-between">
+                              <span>{n.title}</span>
+                              <span className="text-[9px] text-slate-500 font-mono">{n.time}</span>
+                            </div>
+                            <p className="text-[11px] mt-1 text-slate-300">{n.text}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Export Report CTA */}
+                <button
+                  onClick={handleExportReport}
+                  className="hidden sm:flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-white/5 hover:bg-white/10 text-white border border-white/10 transition-all hover:border-cyan-500/40"
+                  title="Export Clinical Health Summary"
+                >
+                  <Icon name="download" size={14} />
+                  <span>Export</span>
+                </button>
+
+                {/* Log Activity Button */}
+                <button
+                  onClick={() => {
+                    setShowActivityModal(true);
+                    triggerSound('click');
+                  }}
+                  className="flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold bg-cyan-500 hover:bg-cyan-400 text-black shadow-glow-cyan transition-all transform active:scale-95"
+                >
+                  <Icon name="plus" size={16} />
+                  <span className="hidden sm:inline">Log Session</span>
+                </button>
+              </div>
+            </header>
+
+            {/* Interactive Toast Notification */}
+            {toastMessage && (
+              <div className="fixed bottom-6 right-6 z-50 glass-panel bg-slate-900/95 text-white border border-cyan-500/40 px-4 py-3 rounded-2xl shadow-2xl flex items-center space-x-3 animate-bounce">
+                <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
+                <span className="text-xs font-medium">{toastMessage}</span>
+              </div>
+            )}
+
+            {/* ========================================================= */}
+            {/* VIEW ROUTER BASED ON ACTIVETAB */}
+            {/* ========================================================= */}
+            <div className="p-4 sm:p-6 space-y-6 max-w-7xl mx-auto w-full">
+              {/* Demo Notice Banner */}
+              <div className="glass-panel rounded-2xl p-4 border border-cyan-500/20 bg-gradient-to-r from-cyan-950/20 via-slate-900/40 to-violet-950/20 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 shrink-0">
+                    <Icon name="shield" size={20} />
+                  </div>
+                  <div>
+                    <div className="flex items-center space-x-2">
+                      <span className="text-xs font-bold text-white tracking-wide uppercase font-mono">DEMO CLINICAL DATASET</span>
+                      <span className="text-[9px] bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-full font-mono font-semibold">SYNCHRONIZED SENSORS</span>
+                    </div>
+                    <p className="text-xs text-slate-300 mt-0.5">
+                      All biometric signals, ECG lead streams, and circadian metrics are simulated with physiological realism for demonstration.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center space-x-2 shrink-0">
+                  <button
+                    onClick={() => addHydration(250)}
+                    className="px-3 py-1.5 rounded-xl bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-400 border border-cyan-500/30 text-xs font-mono font-semibold transition-all"
+                  >
+                    +250ml Water
+                  </button>
+                  <button
+                    onClick={() => addHydration(500)}
+                    className="px-3 py-1.5 rounded-xl bg-blue-500/15 hover:bg-blue-500/25 text-blue-400 border border-blue-500/30 text-xs font-mono font-semibold transition-all"
+                  >
+                    +500ml Water
+                  </button>
+                </div>
+              </div>
+
+              {/* TAB 1: OVERVIEW */}
+              {activeTab === 'overview' && (
+                <>
+                  {/* OVERVIEW VITAL CARDS */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                    {/* 1. Heart Rate & ECG */}
+                    <div className="glass-panel rounded-2xl p-4 border border-white/5 relative overflow-hidden group hover:border-cyan-500/40 transition-all">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-medium text-slate-400">Heart Rate</span>
+                        <span className="w-8 h-8 rounded-xl bg-rose-500/10 text-rose-400 flex items-center justify-center">
+                          <Icon name="heart" size={16} />
+                        </span>
+                      </div>
+                      <div className="mt-3 flex items-baseline space-x-2">
+                        <span className="text-3xl font-extrabold text-white font-mono tracking-tight">{vitals.heartRate}</span>
+                        <span className="text-xs font-mono text-slate-400">BPM</span>
+                        <span className="text-[10px] font-mono text-emerald-400 ml-auto flex items-center">
+                          <Icon name="arrowDownRight" size={12} className="mr-0.5" /> -4 vs avg
+                        </span>
+                      </div>
+                      <div className="mt-1 flex items-center justify-between text-[11px] font-mono text-slate-400">
+                        <span>Resting: {vitals.restingHR} BPM</span>
+                        <span>HRV: {vitals.hrv} ms</span>
+                      </div>
+                      <div className="mt-3">
+                        <ECGWaveform bpm={vitals.heartRate} isStreaming={isLiveStreaming} />
+                      </div>
+                    </div>
+
+                    {/* 2. Sleep Quality */}
+                    <div className="glass-panel rounded-2xl p-4 border border-white/5 relative overflow-hidden group hover:border-violet-500/40 transition-all">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-medium text-slate-400">Sleep Score</span>
+                        <span className="w-8 h-8 rounded-xl bg-violet-500/10 text-violet-400 flex items-center justify-center">
+                          <Icon name="moon" size={16} />
+                        </span>
+                      </div>
+                      <div className="mt-3 flex items-baseline space-x-2">
+                        <span className="text-3xl font-extrabold text-white font-mono tracking-tight">{vitals.sleepScore}</span>
+                        <span className="text-xs font-mono text-slate-400">/ 100</span>
+                        <span className="text-[10px] font-mono text-emerald-400 ml-auto flex items-center">
+                          <Icon name="arrowUpRight" size={12} className="mr-0.5" /> +5% Rest
+                        </span>
+                      </div>
+                      <div className="mt-1 text-[11px] text-slate-400 font-mono">
+                        Duration: <span className="text-slate-200 font-semibold">{vitals.sleepDuration}</span>
+                      </div>
+                      <div className="mt-4 space-y-1.5">
+                        <div className="h-2 w-full bg-slate-800 rounded-full overflow-hidden flex">
+                          <div style={{ width: '24%' }} className="bg-violet-500" title="Deep Sleep (1h 52m)" />
+                          <div style={{ width: '27%' }} className="bg-cyan-400" title="REM Sleep (2h 04m)" />
+                          <div style={{ width: '44%' }} className="bg-blue-400" title="Light Sleep (3h 52m)" />
+                          <div style={{ width: '5%' }} className="bg-rose-500" title="Awake (22m)" />
+                        </div>
+                        <div className="flex justify-between text-[10px] text-slate-400 font-mono">
+                          <span>Deep: 1h 52m</span>
+                          <span>REM: 2h 04m</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* 3. Daily Steps */}
+                    <div className="glass-panel rounded-2xl p-4 border border-white/5 relative overflow-hidden group hover:border-emerald-500/40 transition-all">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-medium text-slate-400">Daily Steps</span>
+                        <span className="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center">
+                          <Icon name="footprints" size={16} />
+                        </span>
+                      </div>
+                      <div className="mt-3 flex items-baseline space-x-2">
+                        <span className="text-3xl font-extrabold text-white font-mono tracking-tight">{vitals.steps.toLocaleString()}</span>
+                        <span className="text-xs font-mono text-slate-400">steps</span>
+                      </div>
+                      <div className="mt-1 text-[11px] text-slate-400 font-mono">
+                        Target: <span className="text-slate-200 font-semibold">{vitals.stepGoal.toLocaleString()}</span> ({Math.round((vitals.steps / vitals.stepGoal) * 100)}%)
+                      </div>
+                      <div className="mt-4 space-y-1.5">
+                        <div className="h-2 w-full bg-slate-800 rounded-full overflow-hidden">
+                          <div
+                            style={{ width: `${Math.min(100, (vitals.steps / vitals.stepGoal) * 100)}%` }}
+                            className="h-full bg-emerald-400 rounded-full transition-all duration-500 shadow-glow-emerald"
+                          />
+                        </div>
+                        <div className="flex justify-between text-[10px] text-slate-400 font-mono">
+                          <span>Dist: 8.64 km</span>
+                          <span>Floors: 14</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* 4. Day Strain */}
+                    <div className="glass-panel rounded-2xl p-4 border border-white/5 relative overflow-hidden group hover:border-amber-500/40 transition-all">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-medium text-slate-400">Day Strain</span>
+                        <span className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center">
+                          <Icon name="flame" size={16} />
+                        </span>
+                      </div>
+                      <div className="mt-3 flex items-baseline space-x-2">
+                        <span className="text-3xl font-extrabold text-white font-mono tracking-tight">{vitals.strainScore}</span>
+                        <span className="text-xs font-mono text-slate-400">/ 21.0</span>
+                        <span className="text-[10px] font-mono text-amber-400 ml-auto font-semibold">PEAK</span>
+                      </div>
+                      <div className="mt-1 text-[11px] text-slate-400 font-mono">
+                        Active Burn: <span className="text-slate-200 font-semibold">{vitals.calories} kcal</span>
+                      </div>
+                      <div className="mt-4 space-y-1.5">
+                        <div className="h-2 w-full bg-slate-800 rounded-full overflow-hidden">
+                          <div
+                            style={{ width: `${Math.min(100, (vitals.calories / vitals.calorieGoal) * 100)}%` }}
+                            className="h-full bg-gradient-to-r from-amber-400 to-rose-500 rounded-full transition-all duration-500"
+                          />
+                        </div>
+                        <div className="flex justify-between text-[10px] text-slate-400 font-mono">
+                          <span>Basal: 1,740 kcal</span>
+                          <span>Total: {vitals.calories + 1740}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* 5. Hydration Level */}
+                    <div className="glass-panel rounded-2xl p-4 border border-white/5 relative overflow-hidden group hover:border-blue-500/40 transition-all">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-medium text-slate-400">Hydration Balance</span>
+                        <span className="w-8 h-8 rounded-xl bg-blue-500/10 text-blue-400 flex items-center justify-center">
+                          <Icon name="droplets" size={16} />
+                        </span>
+                      </div>
+                      <div className="mt-3 flex items-baseline space-x-2">
+                        <span className="text-3xl font-extrabold text-white font-mono tracking-tight">{vitals.hydration}</span>
+                        <span className="text-xs font-mono text-slate-400">mL</span>
+                        <span className="text-[10px] font-mono text-cyan-400 ml-auto font-semibold">
+                          {Math.round((vitals.hydration / vitals.hydrationGoal) * 100)}%
+                        </span>
+                      </div>
+                      <div className="mt-1 text-[11px] text-slate-400 font-mono">
+                        Target: <span className="text-slate-200 font-semibold">{vitals.hydrationGoal} mL</span>
+                      </div>
+                      <div className="mt-4 space-y-1.5">
+                        <div className="h-2 w-full bg-slate-800 rounded-full overflow-hidden">
+                          <div
+                            style={{ width: `${Math.min(100, (vitals.hydration / vitals.hydrationGoal) * 100)}%` }}
+                            className="h-full bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full transition-all duration-500"
+                          />
+                        </div>
+                        <div className="flex justify-between text-[10px] text-slate-400 font-mono">
+                          <span>Remaining: {Math.max(0, vitals.hydrationGoal - vitals.hydration)} mL</span>
+                          <button onClick={() => addHydration(250)} className="text-cyan-400 font-semibold hover:underline">
+                            +Log
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* PRIMARY INTERACTIVE CHARTS & READINESS */}
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    {/* Left: Interactive Telemetry Chart */}
+                    <div className="lg:col-span-2 glass-panel rounded-2xl p-6 border border-white/5 space-y-4">
+                      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                        <div>
+                          <h3 className="text-sm font-bold text-white tracking-wide flex items-center gap-2">
+                            <span>Biometric Continuum & Autonomic Response</span>
+                            <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
+                              {dateFilter} Window
+                            </span>
+                          </h3>
+                          <p className="text-xs text-slate-400 mt-0.5">High-frequency PPG & continuous HRV autonomic nervous metrics</p>
+                        </div>
+
+                        {/* Metric Toggles */}
+                        <div className="flex items-center space-x-1 bg-slate-900/80 p-1 rounded-xl border border-white/5 text-xs font-mono">
+                          {[
+                            { key: 'heartRate', label: 'Heart Rate', color: '#00F5FF' },
+                            { key: 'hrv', label: 'HRV', color: '#10B981' },
+                            { key: 'strain', label: 'Strain', color: '#F59E0B' },
+                          ].map(metric => (
+                            <button
+                              key={metric.key}
+                              onClick={() => {
+                                setActiveChartMetric(metric.key);
+                                triggerSound('click');
+                              }}
+                              className={`px-3 py-1 rounded-lg transition-all ${
+                                activeChartMetric === metric.key
+                                  ? 'bg-slate-800 text-white font-bold border border-white/10 shadow-sm'
+                                  : 'text-slate-400 hover:text-white'
+                              }`}
+                            >
+                              <span className="inline-block w-2 h-2 rounded-full mr-1.5" style={{ backgroundColor: metric.color }} />
+                              {metric.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Chart Area */}
+                      <div className="pt-2">
+                        <DualTelemetryChart
+                          data={chartDatasets[dateFilter] || chartDatasets['7D']}
+                          metricKey={activeChartMetric}
+                          color={
+                            activeChartMetric === 'heartRate' ? '#00F5FF' :
+                            activeChartMetric === 'hrv' ? '#10B981' : '#F59E0B'
+                          }
+                          unit={
+                            activeChartMetric === 'heartRate' ? 'BPM' :
+                            activeChartMetric === 'hrv' ? 'ms' : '/ 21'
+                          }
+                          height={240}
+                        />
+                      </div>
+
+                      {/* Baseline Metrics Bar */}
+                      <div className="pt-3 border-t border-slate-800/80 grid grid-cols-3 gap-2 text-center">
+                        <div className="p-2 rounded-xl bg-slate-950/40 border border-white/5">
+                          <div className="text-[10px] text-slate-400 uppercase font-mono">Peak Reading</div>
+                          <div className="text-base font-bold text-white font-mono mt-0.5">146 BPM</div>
+                          <div className="text-[9px] text-slate-500">Anaerobic Zone 4</div>
+                        </div>
+                        <div className="p-2 rounded-xl bg-slate-950/40 border border-white/5">
+                          <div className="text-[10px] text-slate-400 uppercase font-mono">Resting Average</div>
+                          <div className="text-base font-bold text-emerald-400 font-mono mt-0.5">58 BPM</div>
+                          <div className="text-[9px] text-emerald-500/80">Top 3rd Percentile</div>
+                        </div>
+                        <div className="p-2 rounded-xl bg-slate-950/40 border border-white/5">
+                          <div className="text-[10px] text-slate-400 uppercase font-mono">Autonomic Index</div>
+                          <div className="text-base font-bold text-cyan-400 font-mono mt-0.5">74 ms HRV</div>
+                          <div className="text-[9px] text-cyan-500/80">Parasympathetic Dominant</div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Right: Readiness Score & Body Battery */}
+                    <div className="glass-panel rounded-2xl p-6 border border-white/5 flex flex-col justify-between">
+                      <div>
+                        <div className="flex items-center justify-between">
+                          <h3 className="text-sm font-bold text-white tracking-wide">Physiological Readiness</h3>
+                          <span className="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
+                            Peak State
+                          </span>
+                        </div>
+                        <p className="text-xs text-slate-400 mt-0.5">Autonomic composite of resting pulse, sleep efficiency & HRV</p>
+                      </div>
+
+                      <CircularGauge score={92} label="Body Battery Index" subtitle="Fully Restored • Primed for Strain" />
+
+                      <div className="space-y-2 pt-2 border-t border-slate-800/80 text-xs">
+                        <div className="flex items-center justify-between text-slate-300">
+                          <span className="flex items-center gap-1.5">
+                            <Icon name="check" size={14} className="text-emerald-400" />
+                            <span>Resting HR Baseline</span>
+                          </span>
+                          <span className="font-mono text-emerald-400 font-semibold">Optimal (56 BPM)</span>
+                        </div>
+                        <div className="flex items-center justify-between text-slate-300">
+                          <span className="flex items-center gap-1.5">
+                            <Icon name="check" size={14} className="text-emerald-400" />
+                            <span>HRV Autonomic Balance</span>
+                          </span>
+                          <span className="font-mono text-emerald-400 font-semibold">+14% vs 30D</span>
+                        </div>
+                        <div className="flex items-center justify-between text-slate-300">
+                          <span className="flex items-center gap-1.5">
+                            <Icon name="check" size={14} className="text-emerald-400" />
+                            <span>Skin Temp Variance</span>
+                          </span>
+                          <span className="font-mono text-slate-200 font-semibold">-0.2°C (Optimal)</span>
+                        </div>
+                        <div className="flex items-center justify-between text-slate-300">
+                          <span className="flex items-center gap-1.5">
+                            <Icon name="check" size={14} className="text-emerald-400" />
+                            <span>Pulse Oximetry (SpO2)</span>
+                          </span>
+                          <span className="font-mono text-cyan-400 font-semibold">{vitals.spO2}%</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* WEEKLY TRENDS & SLEEP HYPNOGRAM */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {/* Weekly Trend Bar Chart */}
+                    <div className="glass-panel rounded-2xl p-6 border border-white/5 space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                            <Icon name="trendingUp" size={16} className="text-cyan-400" />
+                            <span>7-Day Mobility & Step Distribution</span>
+                          </h3>
+                          <p className="text-xs text-slate-400 mt-0.5">Week-over-week physical load and active volume</p>
+                        </div>
+                        <span className="text-xs font-mono text-cyan-400 bg-cyan-500/10 px-2.5 py-1 rounded-xl border border-cyan-500/20 font-semibold">
+                          Avg: 11,558 / day
+                        </span>
+                      </div>
+
+                      <WeeklyTrendChart data={chartDatasets['7D']} />
+
+                      <div className="grid grid-cols-3 gap-3 pt-2">
+                        <div className="p-2.5 rounded-xl bg-slate-950/40 border border-white/5 text-center">
+                          <div className="text-[10px] text-slate-400 font-mono">Highest Volume</div>
+                          <div className="text-sm font-bold text-white font-mono mt-0.5">14,200 (Sat)</div>
+                          <div className="text-[9px] text-emerald-400">+18% vs Goal</div>
+                        </div>
+                        <div className="p-2.5 rounded-xl bg-slate-950/40 border border-white/5 text-center">
+                          <div className="text-[10px] text-slate-400 font-mono">Weekly Miles</div>
+                          <div className="text-sm font-bold text-cyan-400 font-mono mt-0.5">58.4 km</div>
+                          <div className="text-[9px] text-slate-400">Total Traveled</div>
+                        </div>
+                        <div className="p-2.5 rounded-xl bg-slate-950/40 border border-white/5 text-center">
+                          <div className="text-[10px] text-slate-400 font-mono">Target Adherence</div>
+                          <div className="text-sm font-bold text-emerald-400 font-mono mt-0.5">6 of 7 Days</div>
+                          <div className="text-[9px] text-slate-400">85.7% Consistency</div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Sleep Hypnogram */}
+                    <div className="glass-panel rounded-2xl p-6 border border-white/5 space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                            <Icon name="moon" size={16} className="text-violet-400" />
+                            <span>Circadian Sleep Hypnogram</span>
+                          </h3>
+                          <p className="text-xs text-slate-400 mt-0.5">Polysomnographic cycle tracking via PPG and 3D accelerometer</p>
+                        </div>
+                        <span className="text-xs font-mono text-violet-400 bg-violet-500/10 px-2.5 py-1 rounded-xl border border-violet-500/20 font-semibold">
+                          94% Efficiency
+                        </span>
+                      </div>
+
+                      <SleepHypnogram />
+
+                      <div className="grid grid-cols-3 gap-3 pt-2">
+                        <div className="p-2.5 rounded-xl bg-slate-950/40 border border-white/5 text-center">
+                          <div className="text-[10px] text-slate-400 font-mono">Restorative REM</div>
+                          <div className="text-sm font-bold text-cyan-400 font-mono mt-0.5">2h 04m</div>
+                          <div className="text-[9px] text-slate-500">Cognitive Recovery</div>
+                        </div>
+                        <div className="p-2.5 rounded-xl bg-slate-950/40 border border-white/5 text-center">
+                          <div className="text-[10px] text-slate-400 font-mono">Deep Delta Sleep</div>
+                          <div className="text-sm font-bold text-violet-400 font-mono mt-0.5">1h 52m</div>
+                          <div className="text-[9px] text-slate-500">Cellular Repair</div>
+                        </div>
+                        <div className="p-2.5 rounded-xl bg-slate-950/40 border border-white/5 text-center">
+                          <div className="text-[10px] text-slate-400 font-mono">Sleep Latency</div>
+                          <div className="text-sm font-bold text-emerald-400 font-mono mt-0.5">8 min</div>
+                          <div className="text-[9px] text-slate-500">Rapid Transition</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* ACTIVITY TIMELINE & AI INSIGHTS */}
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    {/* Left (2 cols): Activity Timeline Log */}
+                    <div className="lg:col-span-2 glass-panel rounded-2xl p-6 border border-white/5 space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                            <Icon name="activity" size={16} className="text-cyan-400" />
+                            <span>Today's Physical Activity Timeline</span>
+                          </h3>
+                          <p className="text-xs text-slate-400 mt-0.5">Chronological record of strain bouts and cardiovascular load</p>
+                        </div>
+                        <button
+                          onClick={() => setShowActivityModal(true)}
+                          className="text-xs font-mono text-cyan-400 hover:text-cyan-300 font-semibold"
+                        >
+                          + Add Session
+                        </button>
+                      </div>
+
+                      <div className="space-y-3">
+                        {activities.map((act) => (
+                          <div
+                            key={act.id}
+                            className="p-3.5 rounded-xl bg-slate-950/40 border border-white/5 hover:border-cyan-500/30 transition-all flex items-center justify-between group"
+                          >
+                            <div className="flex items-center space-x-3.5">
+                              <div className="w-10 h-10 rounded-xl bg-cyan-500/10 text-cyan-400 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                                <Icon name={act.icon} size={18} />
+                              </div>
+                              <div>
+                                <div className="text-xs font-bold text-white flex items-center gap-2">
+                                  <span>{act.type}</span>
+                                  <span className="text-[10px] font-mono text-slate-400 font-normal">{act.time}</span>
+                                </div>
+                                <div className="text-[11px] text-slate-400 mt-0.5 flex items-center space-x-3 font-mono">
+                                  <span>Duration: {act.duration}</span>
+                                  <span>•</span>
+                                  <span>Avg HR: {act.hrAvg}</span>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="text-right">
+                              <div className="text-xs font-bold text-amber-400 font-mono">+{act.calories} kcal</div>
+                              <div className="text-[10px] font-mono text-cyan-400 mt-0.5">Strain: {act.strain}</div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Right (1 col): AI Health Insights Engine */}
+                    <div className="glass-panel rounded-2xl p-6 border border-white/5 space-y-4 flex flex-col justify-between">
+                      <div>
+                        <div className="flex items-center justify-between">
+                          <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                            <Icon name="sparkles" size={16} className="text-cyan-400" />
+                            <span>BioSync AI Insights</span>
+                          </h3>
+                          <span className="text-[10px] font-mono text-cyan-300 bg-cyan-500/20 px-2 py-0.5 rounded-full border border-cyan-500/30">
+                            Neural v3.2
+                          </span>
+                        </div>
+                        <p className="text-xs text-slate-400 mt-0.5">Autonomous biometric analysis & predictive recommendations</p>
+                      </div>
+
+                      <div className="space-y-2.5">
+                        <div className="p-3 rounded-xl bg-cyan-950/20 border border-cyan-500/20 text-xs flex items-start space-x-3">
+                          <span className="p-1.5 rounded-lg bg-cyan-500/20 text-cyan-400 shrink-0">
+                            <Icon name="zap" size={14} />
+                          </span>
+                          <div>
+                            <div className="font-semibold text-white">Zone 2 Aerobic Base Growth</div>
+                            <p className="text-slate-300 text-[11px] mt-0.5">
+                              Resting heart rate dropped by 2 BPM over the last 14 days, indicating increased left-ventricular stroke volume.
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="p-3 rounded-xl bg-violet-950/20 border border-violet-500/20 text-xs flex items-start space-x-3">
+                          <span className="p-1.5 rounded-lg bg-violet-500/20 text-violet-400 shrink-0">
+                            <Icon name="moon" size={14} />
+                          </span>
+                          <div>
+                            <div className="font-semibold text-white">Consistent Circadian Anchor</div>
+                            <p className="text-slate-300 text-[11px] mt-0.5">
+                              Your wake time variance is within 12 minutes across 5 days. Cortisol awakening response is optimal.
+                            </p>
+                          </div>
+                        </div>
+
+                        {aiResponse && (
+                          <div className="p-3 rounded-xl bg-emerald-950/30 border border-emerald-500/30 text-xs animate-fadeIn">
+                            <div className="font-semibold text-emerald-300 flex items-center gap-1.5">
+                              <Icon name="sparkles" size={14} />
+                              <span>AI Consultation Result:</span>
+                            </div>
+                            <p className="text-slate-200 text-[11px] mt-1 leading-relaxed">{aiResponse}</p>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Interactive AI Query */}
+                      <form onSubmit={handleAiDiagnostic} className="relative mt-2">
+                        <input
+                          type="text"
+                          value={aiQuery}
+                          onChange={(e) => setAiQuery(e.target.value)}
+                          placeholder="Ask BioSync AI (e.g. 'Analyze recovery', 'Why is HRV high?')"
+                          className="w-full bg-slate-950/80 border border-slate-700/80 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400 pr-20"
+                        />
+                        <button
+                          type="submit"
+                          disabled={isAiLoading || !aiQuery.trim()}
+                          className="absolute right-1.5 top-1.5 px-3 py-1 bg-cyan-500 hover:bg-cyan-400 disabled:opacity-50 text-black font-bold text-xs rounded-lg transition-all"
+                        >
+                          {isAiLoading ? 'Analyzing...' : 'Ask AI'}
+                        </button>
+                      </form>
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {/* TAB 2: CARDIAC & VITALS DEEP DIVE */}
+              {activeTab === 'biometrics' && (
+                <div className="space-y-6">
+                  <div className="glass-panel rounded-2xl p-6 border border-white/5 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="text-base font-bold text-white flex items-center gap-2">
+                          <Icon name="heart" size={18} className="text-rose-400" />
+                          <span>Electrophysiology & Lead II ECG Live Sweep</span>
+                        </h3>
+                        <p className="text-xs text-slate-400 mt-0.5">High-resolution cardiac vector voltage recorded at 500 Hz sampling frequency</p>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <span className="text-xs font-mono text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-xl border border-emerald-500/20">
+                          Sinus Rhythm • Normal
+                        </span>
+                      </div>
+                    </div>
+
+                    <ECGWaveform bpm={vitals.heartRate} isStreaming={isLiveStreaming} />
+
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
+                      <div className="p-3 rounded-xl bg-slate-950/50 border border-white/5">
+                        <div className="text-[10px] text-slate-400 uppercase font-mono">Current Heart Rate</div>
+                        <div className="text-2xl font-bold text-white font-mono mt-1">{vitals.heartRate} BPM</div>
+                        <div className="text-[10px] text-emerald-400">Resting Baseline: {vitals.restingHR}</div>
+                      </div>
+                      <div className="p-3 rounded-xl bg-slate-950/50 border border-white/5">
+                        <div className="text-[10px] text-slate-400 uppercase font-mono">Heart Rate Variability</div>
+                        <div className="text-2xl font-bold text-cyan-400 font-mono mt-1">{vitals.hrv} ms</div>
+                        <div className="text-[10px] text-cyan-300">rMSSD Autonomic Score</div>
+                      </div>
+                      <div className="p-3 rounded-xl bg-slate-950/50 border border-white/5">
+                        <div className="text-[10px] text-slate-400 uppercase font-mono">Blood Pressure</div>
+                        <div className="text-2xl font-bold text-white font-mono mt-1">{vitals.bloodPressure}</div>
+                        <div className="text-[10px] text-emerald-400">mmHg • Normotensive</div>
+                      </div>
+                      <div className="p-3 rounded-xl bg-slate-950/50 border border-white/5">
+                        <div className="text-[10px] text-slate-400 uppercase font-mono">Arterial Pulse Wave</div>
+                        <div className="text-2xl font-bold text-violet-400 font-mono mt-1">6.2 m/s</div>
+                        <div className="text-[10px] text-violet-300">Optimal Vascular Compliance</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 24-Hour Heart Rate Variability Curve */}
+                  <div className="glass-panel rounded-2xl p-6 border border-white/5 space-y-4">
+                    <h3 className="text-sm font-bold text-white">24-Hour Autonomic Tone & HRV Frequency Power</h3>
+                    <DualTelemetryChart data={chartDatasets['24H']} metricKey="hrv" color="#10B981" unit="ms" height={220} />
+                  </div>
+                </div>
+              )}
+
+              {/* TAB 3: SLEEP ARCHITECTURE */}
+              {activeTab === 'sleep' && (
+                <div className="space-y-6">
+                  <div className="glass-panel rounded-2xl p-6 border border-white/5 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="text-base font-bold text-white flex items-center gap-2">
+                          <Icon name="moon" size={18} className="text-violet-400" />
+                          <span>Detailed Polysomnography & Sleep Stages</span>
+                        </h3>
+                        <p className="text-xs text-slate-400 mt-0.5">Chronobiological sleep stage breakdown for Thursday Night</p>
+                      </div>
+                      <span className="text-xs font-mono text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-xl border border-emerald-500/20 font-semibold">
+                        Overall Score: {vitals.sleepScore} / 100
+                      </span>
+                    </div>
+
+                    <SleepHypnogram />
+
+                    <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 pt-3">
+                      <div className="p-3 rounded-xl bg-violet-950/20 border border-violet-500/20 text-center">
+                        <div className="text-[10px] text-violet-300 font-mono uppercase">Deep (Stage 3 & 4)</div>
+                        <div className="text-xl font-bold text-white font-mono mt-1">1h 52m (24%)</div>
+                        <div className="text-[10px] text-slate-400 mt-0.5">Cellular Tissue Regeneration</div>
+                      </div>
+                      <div className="p-3 rounded-xl bg-cyan-950/20 border border-cyan-500/20 text-center">
+                        <div className="text-[10px] text-cyan-300 font-mono uppercase">Rapid Eye Movement</div>
+                        <div className="text-xl font-bold text-white font-mono mt-1">2h 04m (27%)</div>
+                        <div className="text-[10px] text-slate-400 mt-0.5">Memory Consolidation</div>
+                      </div>
+                      <div className="p-3 rounded-xl bg-blue-950/20 border border-blue-500/20 text-center">
+                        <div className="text-[10px] text-blue-300 font-mono uppercase">Light Non-REM</div>
+                        <div className="text-xl font-bold text-white font-mono mt-1">3h 52m (44%)</div>
+                        <div className="text-[10px] text-slate-400 mt-0.5">Baseline Recovery State</div>
+                      </div>
+                      <div className="p-3 rounded-xl bg-rose-950/20 border border-rose-500/20 text-center">
+                        <div className="text-[10px] text-rose-300 font-mono uppercase">Awake / Micro-arousal</div>
+                        <div className="text-xl font-bold text-white font-mono mt-1">22 min (5%)</div>
+                        <div className="text-[10px] text-slate-400 mt-0.5">Minimal Night Awakening</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Sleep Biomarkers */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="glass-panel rounded-2xl p-4 border border-white/5">
+                      <div className="text-xs text-slate-400 font-mono">Nighttime Heart Rate Dip</div>
+                      <div className="text-2xl font-bold text-white font-mono mt-1">16.2% Dip</div>
+                      <div className="text-[11px] text-emerald-400 mt-1">Healthy cardiovascular deceleration</div>
+                    </div>
+                    <div className="glass-panel rounded-2xl p-4 border border-white/5">
+                      <div className="text-xs text-slate-400 font-mono">Skin Temp Deviation</div>
+                      <div className="text-2xl font-bold text-white font-mono mt-1">-0.2°C</div>
+                      <div className="text-[11px] text-slate-400 mt-1">Normal circadian drop during sleep</div>
+                    </div>
+                    <div className="glass-panel rounded-2xl p-4 border border-white/5">
+                      <div className="text-xs text-slate-400 font-mono">Respiration Frequency</div>
+                      <div className="text-2xl font-bold text-white font-mono mt-1">13.6 br/min</div>
+                      <div className="text-[11px] text-cyan-400 mt-1">Unobstructed airway dynamics</div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* TAB 4: STRAIN & ACTIVITY */}
+              {activeTab === 'activity' && (
+                <div className="space-y-6">
+                  <div className="glass-panel rounded-2xl p-6 border border-white/5 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="text-base font-bold text-white flex items-center gap-2">
+                          <Icon name="flame" size={18} className="text-amber-400" />
+                          <span>Cardiovascular Strain Zones & Metabolic Burn</span>
+                        </h3>
+                        <p className="text-xs text-slate-400 mt-0.5">Calculated using Børsheim heart rate reserve algorithms</p>
+                      </div>
+                      <button
+                        onClick={() => setShowActivityModal(true)}
+                        className="px-3.5 py-1.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-black font-bold text-xs shadow-glow-cyan"
+                      >
+                        + Record Workout
+                      </button>
+                    </div>
+
+                    {/* Zone Breakdown */}
+                    <div className="space-y-3 pt-2">
+                      {[
+                        { zone: 'Zone 5: Anaerobic Peak (160+ BPM)', time: '8 min', pct: 6, color: '#EF4444' },
+                        { zone: 'Zone 4: Threshold VO2 (142 - 159 BPM)', time: '24 min', pct: 22, color: '#F59E0B' },
+                        { zone: 'Zone 3: Aerobic Tempo (125 - 141 BPM)', time: '36 min', pct: 33, color: '#10B981' },
+                        { zone: 'Zone 2: Endurance Base (108 - 124 BPM)', time: '42 min', pct: 39, color: '#00F5FF' },
+                      ].map((z, i) => (
+                        <div key={i}>
+                          <div className="flex justify-between text-xs font-mono mb-1">
+                            <span className="text-slate-300">{z.zone}</span>
+                            <span className="font-bold" style={{ color: z.color }}>{z.time} ({z.pct}%)</span>
+                          </div>
+                          <div className="h-2 w-full bg-slate-800 rounded-full overflow-hidden">
+                            <div style={{ width: `${z.pct}%`, backgroundColor: z.color }} className="h-full rounded-full" />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Workout Feed */}
+                  <div className="glass-panel rounded-2xl p-6 border border-white/5 space-y-4">
+                    <h3 className="text-sm font-bold text-white">Logged Workout History</h3>
+                    <div className="space-y-3">
+                      {activities.map((act) => (
+                        <div key={act.id} className="p-3.5 rounded-xl bg-slate-950/40 border border-white/5 flex items-center justify-between">
+                          <div className="flex items-center space-x-3.5">
+                            <div className="w-10 h-10 rounded-xl bg-cyan-500/10 text-cyan-400 flex items-center justify-center shrink-0">
+                              <Icon name={act.icon} size={18} />
+                            </div>
+                            <div>
+                              <div className="text-xs font-bold text-white">{act.type} • <span className="font-mono text-slate-400">{act.time}</span></div>
+                              <div className="text-[11px] text-slate-400 font-mono mt-0.5">Duration: {act.duration} • Avg: {act.hrAvg}</div>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-xs font-bold text-amber-400 font-mono">+{act.calories} kcal</div>
+                            <div className="text-[10px] font-mono text-cyan-400">Strain {act.strain}</div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* TAB 5: HYDRATION & NUTRITION */}
+              {activeTab === 'hydration' && (
+                <div className="space-y-6">
+                  <div className="glass-panel rounded-2xl p-6 border border-white/5 space-y-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="text-base font-bold text-white flex items-center gap-2">
+                          <Icon name="droplets" size={18} className="text-blue-400" />
+                          <span>Fluid Homeostasis & Electrolyte Osmolarity</span>
+                        </h3>
+                        <p className="text-xs text-slate-400 mt-0.5">Dynamic intake calculations matched against workout sweat rate</p>
+                      </div>
+                      <span className="text-xs font-mono text-cyan-400 bg-cyan-500/10 px-3 py-1 rounded-xl border border-cyan-500/20 font-semibold">
+                        {Math.round((vitals.hydration / vitals.hydrationGoal) * 100)}% Fulfilled
+                      </span>
+                    </div>
+
+                    {/* Fluid Tank Visualizer */}
+                    <div className="relative h-44 w-full bg-slate-950/80 rounded-2xl border border-blue-500/30 overflow-hidden flex flex-col justify-end p-4">
+                      {/* Animated Fluid Wave Layer */}
+                      <div
+                        style={{ height: `${Math.min(100, (vitals.hydration / vitals.hydrationGoal) * 100)}%` }}
+                        className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-blue-600/40 via-cyan-500/30 to-cyan-400/20 transition-all duration-700 backdrop-blur-sm"
+                      >
+                        <div className="w-full h-2 bg-cyan-400/50 shadow-glow-cyan" />
+                      </div>
+
+                      <div className="relative z-10 flex items-end justify-between">
+                        <div>
+                          <div className="text-3xl font-extrabold text-white font-mono">{vitals.hydration} <span className="text-sm font-normal text-slate-300">mL</span></div>
+                          <div className="text-xs text-cyan-300 font-mono mt-0.5">Target Daily Pacing: {vitals.hydrationGoal} mL</div>
+                        </div>
+
+                        {/* Quick Add Buttons */}
+                        <div className="flex items-center space-x-2">
+                          <button
+                            onClick={() => addHydration(250)}
+                            className="px-3.5 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-black font-bold text-xs transition-all shadow-glow-cyan"
+                          >
+                            +250 mL
+                          </button>
+                          <button
+                            onClick={() => addHydration(500)}
+                            className="px-3.5 py-2 rounded-xl bg-blue-500 hover:bg-blue-400 text-white font-bold text-xs transition-all shadow-glow-cyan"
+                          >
+                            +500 mL
+                          </button>
+                          <button
+                            onClick={() => addHydration(750)}
+                            className="px-3.5 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-bold text-xs transition-all shadow-glow-violet"
+                          >
+                            +750 mL
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Electrolyte Balances */}
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
+                      <div className="p-3.5 rounded-xl bg-slate-950/50 border border-white/5">
+                        <div className="text-[10px] text-slate-400 font-mono uppercase">Sodium (Na+) Retention</div>
+                        <div className="text-lg font-bold text-white font-mono mt-1">2,140 mg</div>
+                        <div className="text-[10px] text-emerald-400">Electrolyte homeostasis balanced</div>
+                      </div>
+                      <div className="p-3.5 rounded-xl bg-slate-950/50 border border-white/5">
+                        <div className="text-[10px] text-slate-400 font-mono uppercase">Potassium (K+) Reserve</div>
+                        <div className="text-lg font-bold text-white font-mono mt-1">3,420 mg</div>
+                        <div className="text-[10px] text-emerald-400">Optimal intracellular hydration</div>
+                      </div>
+                      <div className="p-3.5 rounded-xl bg-slate-950/50 border border-white/5">
+                        <div className="text-[10px] text-slate-400 font-mono uppercase">Sweat Loss Deficit</div>
+                        <div className="text-lg font-bold text-amber-400 font-mono mt-1">450 mL</div>
+                        <div className="text-[10px] text-slate-400">Post-run rehydration required</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* TAB 6: TARGET MILESTONES & GOALS */}
+              {activeTab === 'goals' && (
+                <div className="space-y-6">
+                  <div className="glass-panel rounded-2xl p-6 border border-white/5 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="text-base font-bold text-white flex items-center gap-2">
+                          <Icon name="award" size={18} className="text-amber-400" />
+                          <span>Customized Target Health Milestones</span>
+                        </h3>
+                        <p className="text-xs text-slate-400 mt-0.5">Weekly biological pacing benchmarks and progression tracking</p>
+                      </div>
+                      <button
+                        onClick={() => setShowGoalModal(true)}
+                        className="px-3.5 py-1.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-black font-bold text-xs shadow-glow-cyan"
+                      >
+                        Adjust Targets
+                      </button>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                      {goals.map((g) => {
+                        const pct = Math.min(100, Math.round((g.current / g.target) * 100));
+                        return (
+                          <div key={g.id} className="p-4 rounded-xl bg-slate-950/50 border border-white/5 space-y-2">
+                            <div className="flex justify-between items-center">
+                              <span className="text-xs font-bold text-white">{g.label}</span>
+                              <span className="text-xs font-mono text-cyan-400 font-bold">{pct}%</span>
+                            </div>
+                            <div className="text-sm font-mono text-slate-300">
+                              {g.current.toLocaleString()} / <span className="font-bold text-white">{g.target.toLocaleString()} {g.unit}</span>
+                            </div>
+                            <div className="h-2.5 w-full bg-slate-800 rounded-full overflow-hidden">
+                              <div
+                                style={{ width: `${pct}%` }}
+                                className="h-full bg-gradient-to-r from-cyan-400 to-emerald-400 rounded-full shadow-glow-cyan transition-all duration-500"
+                              />
+                            </div>
+                            <div className="text-[10px] text-slate-400 flex justify-between font-mono pt-1">
+                              <span>Status: {pct >= 100 ? 'Completed' : 'On Track'}</span>
+                              <span>Remaining: {Math.max(0, g.target - g.current)} {g.unit}</span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* TAB 7: AI HEALTH CORE */}
+              {activeTab === 'insights' && (
+                <div className="space-y-6">
+                  <div className="glass-panel rounded-2xl p-6 border border-white/5 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="text-base font-bold text-white flex items-center gap-2">
+                          <Icon name="sparkles" size={18} className="text-cyan-400" />
+                          <span>BioSync Clinical Intelligence Agent</span>
+                        </h3>
+                        <p className="text-xs text-slate-400 mt-0.5">Machine learning inferences cross-referenced with your historical biometrics</p>
+                      </div>
+                      <span className="text-xs font-mono text-cyan-400 bg-cyan-500/10 px-3 py-1 rounded-xl border border-cyan-500/20 font-semibold">
+                        Neural Core v3.2 Active
+                      </span>
+                    </div>
+
+                    {/* Pre-canned Prompts */}
+                    <div className="flex flex-wrap gap-2 pt-2">
+                      {[
+                        "How is my cardiac recovery today?",
+                        "Analyze my REM sleep latency",
+                        "Evaluate sweat fluid deficit",
+                        "Recommend optimal training intensity",
+                      ].map((prompt, i) => (
+                        <button
+                          key={i}
+                          onClick={() => {
+                            setAiQuery(prompt);
+                            triggerSound('click');
+                          }}
+                          className="px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-700 hover:border-cyan-500/40 text-xs text-slate-300 hover:text-white transition-all"
+                        >
+                          {prompt}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Form */}
+                    <form onSubmit={handleAiDiagnostic} className="relative mt-2">
+                      <input
+                        type="text"
+                        value={aiQuery}
+                        onChange={(e) => setAiQuery(e.target.value)}
+                        placeholder="Type any health, recovery, or physiological question..."
+                        className="w-full bg-slate-950/90 border border-slate-700 rounded-xl px-4 py-3 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400 pr-24"
+                      />
+                      <button
+                        type="submit"
+                        disabled={isAiLoading || !aiQuery.trim()}
+                        className="absolute right-2 top-2 px-4 py-1.5 bg-cyan-500 hover:bg-cyan-400 disabled:opacity-50 text-black font-bold text-xs rounded-lg transition-all shadow-glow-cyan"
+                      >
+                        {isAiLoading ? 'Analyzing...' : 'Execute AI'}
+                      </button>
+                    </form>
+
+                    {/* Result Card */}
+                    {aiResponse && (
+                      <div className="p-4 rounded-xl bg-slate-950/80 border border-cyan-500/30 space-y-2 animate-fadeIn">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-bold text-cyan-400 font-mono flex items-center gap-1.5">
+                            <Icon name="sparkles" size={14} />
+                            <span>Clinical Inference Output</span>
+                          </span>
+                          <span className="text-[10px] text-slate-500 font-mono">Confidence: 99.4%</span>
+                        </div>
+                        <p className="text-xs text-slate-200 leading-relaxed font-sans">{aiResponse}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          </main>
+
+          {/* ========================================================= */}
+          {/* MODAL: LOG NEW ACTIVITY */}
+          {/* ========================================================= */}
+          {showActivityModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md">
+              <div className="glass-panel w-full max-w-md rounded-2xl p-6 border border-slate-700 shadow-2xl space-y-4">
+                <div className="flex items-center justify-between pb-2 border-b border-white/5">
+                  <h3 className="text-base font-bold text-white flex items-center gap-2">
+                    <Icon name="plus" size={18} className="text-cyan-400" />
+                    <span>Log Biometric Workout Session</span>
+                  </h3>
+                  <button onClick={() => setShowActivityModal(false)} className="p-1 rounded-lg text-slate-400 hover:text-white">
+                    <Icon name="x" size={18} />
+                  </button>
+                </div>
+
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    const form = e.target;
+                    const act = {
+                      id: Date.now(),
+                      type: form.actType.value,
+                      icon: form.actType.value.includes('Run') ? 'activity' : form.actType.value.includes('Yoga') ? 'zap' : 'flame',
+                      duration: `${form.actDuration.value} min`,
+                      calories: Number(form.actCalories.value),
+                      strain: Number(form.actStrain.value),
+                      time: 'Just now',
+                      status: 'Completed',
+                      hrAvg: `${form.actHR.value} bpm`
+                    };
+                    handleLogActivity(act);
+                  }}
+                  className="space-y-3.5 text-xs"
+                >
+                  <div>
+                    <label className="block text-slate-300 font-medium mb-1">Session Modality</label>
+                    <select
+                      name="actType"
+                      className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white text-xs focus:outline-none focus:border-cyan-400"
+                    >
+                      <option value="Trail Run">Trail Run (Endurance)</option>
+                      <option value="Strength Training">Strength / Hypertrophy</option>
+                      <option value="HIIT Intervals">HIIT Cardiovascular</option>
+                      <option value="Road Cycling">Road Cycling</option>
+                      <option value="Breathwork & Yoga">Mindful Breathwork & Yoga</option>
+                    </select>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-slate-300 font-medium mb-1">Duration (min)</label>
+                      <input
+                        type="number"
+                        name="actDuration"
+                        defaultValue={45}
+                        required
+                        className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white text-xs focus:outline-none focus:border-cyan-400"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-slate-300 font-medium mb-1">Active Burn (kcal)</label>
+                      <input
+                        type="number"
+                        name="actCalories"
+                        defaultValue={360}
+                        required
+                        className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white text-xs focus:outline-none focus:border-cyan-400"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-slate-300 font-medium mb-1">Avg HR (BPM)</label>
+                      <input
+                        type="number"
+                        name="actHR"
+                        defaultValue={138}
+                        required
+                        className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white text-xs focus:outline-none focus:border-cyan-400"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-slate-300 font-medium mb-1">Strain Score (0 - 21)</label>
+                      <input
+                        type="number"
+                        name="actStrain"
+                        step="0.1"
+                        defaultValue={11.5}
+                        required
+                        className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white text-xs focus:outline-none focus:border-cyan-400"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="pt-2 flex items-center justify-end space-x-2">
+                    <button
+                      type="button"
+                      onClick={() => setShowActivityModal(false)}
+                      className="px-4 py-2 rounded-xl text-slate-300 hover:bg-white/5 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="px-4 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-black font-bold shadow-glow-cyan transition-all"
+                    >
+                      Save Session
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+
+          {/* ========================================================= */}
+          {/* MODAL: GOALS ADJUSTMENT */}
+          {/* ========================================================= */}
+          {showGoalModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md">
+              <div className="glass-panel w-full max-w-md rounded-2xl p-6 border border-slate-700 shadow-2xl space-y-4">
+                <div className="flex items-center justify-between pb-2 border-b border-white/5">
+                  <h3 className="text-base font-bold text-white flex items-center gap-2">
+                    <Icon name="award" size={18} className="text-amber-400" />
+                    <span>Adjust Health Target Milestones</span>
+                  </h3>
+                  <button onClick={() => setShowGoalModal(false)} className="p-1 rounded-lg text-slate-400 hover:text-white">
+                    <Icon name="x" size={18} />
+                  </button>
+                </div>
+
+                <div className="space-y-3 text-xs">
+                  <div>
+                    <label className="block text-slate-300 font-medium mb-1">Daily Step Goal</label>
+                    <input
+                      type="number"
+                      defaultValue={vitals.stepGoal}
+                      onChange={(e) => setVitals(prev => ({ ...prev, stepGoal: Number(e.target.value) }))}
+                      className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white text-xs focus:outline-none focus:border-cyan-400"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-slate-300 font-medium mb-1">Daily Hydration Target (mL)</label>
+                    <input
+                      type="number"
+                      defaultValue={vitals.hydrationGoal}
+                      onChange={(e) => setVitals(prev => ({ ...prev, hydrationGoal: Number(e.target.value) }))}
+                      className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white text-xs focus:outline-none focus:border-cyan-400"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-slate-300 font-medium mb-1">Active Calorie Target (kcal)</label>
+                    <input
+                      type="number"
+                      defaultValue={vitals.calorieGoal}
+                      onChange={(e) => setVitals(prev => ({ ...prev, calorieGoal: Number(e.target.value) }))}
+                      className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white text-xs focus:outline-none focus:border-cyan-400"
+                    />
+                  </div>
+
+                  <div className="pt-2 flex justify-end">
+                    <button
+                      onClick={() => {
+                        setShowGoalModal(false);
+                        showToast("Milestone targets updated successfully!");
+                      }}
+                      className="px-4 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-black font-bold text-xs shadow-glow-cyan transition-all"
+                    >
+                      Update Benchmarks
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ========================================================= */}
+          {/* MODAL: PROFILE & HARDWARE */}
+          {/* ========================================================= */}
+          {showProfileModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md">
+              <div className="glass-panel w-full max-w-lg rounded-2xl p-6 border border-slate-700 shadow-2xl space-y-5">
+                <div className="flex items-center justify-between pb-3 border-b border-white/5">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-cyan-500 to-indigo-600 flex items-center justify-center font-bold text-sm text-white ring-4 ring-cyan-500/20">
+                      GP
+                    </div>
+                    <div>
+                      <h3 className="text-base font-bold text-white">Guda Prahalad</h3>
+                      <p className="text-xs text-cyan-400 font-mono">Athlete ID: #BIO-4921 • Pro Plan Active</p>
+                    </div>
+                  </div>
+                  <button onClick={() => setShowProfileModal(false)} className="p-1 rounded-lg text-slate-400 hover:text-white">
+                    <Icon name="x" size={18} />
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-3 gap-2.5 text-center text-xs">
+                  <div className="p-2.5 rounded-xl bg-slate-950/60 border border-white/5">
+                    <div className="text-[10px] text-slate-400 uppercase font-mono">VO2 Max</div>
+                    <div className="text-base font-bold text-white font-mono mt-0.5">54.2</div>
+                    <div className="text-[9px] text-emerald-400">Superior Tier</div>
+                  </div>
+                  <div className="p-2.5 rounded-xl bg-slate-950/60 border border-white/5">
+                    <div className="text-[10px] text-slate-400 uppercase font-mono">Bio-Age Delta</div>
+                    <div className="text-base font-bold text-emerald-400 font-mono mt-0.5">-4.2 yrs</div>
+                    <div className="text-[9px] text-slate-400">Cellular Vitality</div>
+                  </div>
+                  <div className="p-2.5 rounded-xl bg-slate-950/60 border border-white/5">
+                    <div className="text-[10px] text-slate-400 uppercase font-mono">Basal Rate</div>
+                    <div className="text-base font-bold text-cyan-400 font-mono mt-0.5">1,740</div>
+                    <div className="text-[9px] text-slate-400">kcal / day</div>
+                  </div>
+                </div>
+
+                <div>
+                  <h4 className="text-xs font-bold text-white uppercase tracking-wider font-mono mb-2">Connected Wearables</h4>
+                  <div className="space-y-2">
+                    <div className="p-3 rounded-xl bg-slate-950/40 border border-white/5 flex items-center justify-between text-xs">
+                      <div className="flex items-center space-x-3">
+                        <Icon name="watch" size={18} className="text-cyan-400" />
+                        <div>
+                          <div className="font-semibold text-white">Apple Watch Ultra 2</div>
+                          <div className="text-[10px] text-slate-400 font-mono">PPG Vitals, Accelerometer, ECG</div>
+                        </div>
+                      </div>
+                      <span className="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full">Connected (98%)</span>
+                    </div>
+
+                    <div className="p-3 rounded-xl bg-slate-950/40 border border-white/5 flex items-center justify-between text-xs">
+                      <div className="flex items-center space-x-3">
+                        <Icon name="shield" size={18} className="text-violet-400" />
+                        <div>
+                          <div className="font-semibold text-white">Oura Ring Gen 4</div>
+                          <div className="text-[10px] text-slate-400 font-mono">Circadian Thermometer, Sleep Stages</div>
+                        </div>
+                      </div>
+                      <span className="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full">Connected (84%)</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="pt-2 flex justify-end">
+                  <button
+                    onClick={() => {
+                      setShowProfileModal(false);
+                      showToast("Wearables recalibrated successfully!");
+                    }}
+                    className="px-4 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-black font-bold text-xs shadow-glow-cyan transition-all"
+                  >
+                    Sync & Calibrate Sensors
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    };
+
+    // Mount to DOM
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
